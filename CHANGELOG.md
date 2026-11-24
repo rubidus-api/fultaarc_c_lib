@@ -8,6 +8,20 @@ This project follows Keep a Changelog.
 
 ### Added
 
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+### Security
+
+## [0.1.4] - 2026-11-24
+
+### Added
+
 - RAR 1.5 password decryption (`src/rar/rar15_enc/rar15_cipher.c`, MIT, byte-identical from the
   `fultaarc-cleanroom-rar15-enc3` clean room): password-protected RAR 1.5 entries (Store `0x30` and compressed
   `0x31..0x35`, including solid streams) are now decrypted and verified against CRC-32; the EN/KO derivation guides,

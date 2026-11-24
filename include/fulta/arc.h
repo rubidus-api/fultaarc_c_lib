@@ -31,7 +31,7 @@ extern "C" {
 
 #define FULTA_ARC_VERSION_MAJOR 0
 #define FULTA_ARC_VERSION_MINOR 1
-#define FULTA_ARC_VERSION_PATCH 3
+#define FULTA_ARC_VERSION_PATCH 4
 
 /* ---- errors ------------------------------------------------------------------------------------------------- */
 
