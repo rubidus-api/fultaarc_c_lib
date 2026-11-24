@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RAR 1.5 Encrypted Archive Decryption &amp; Decompression Specification</title>
+<style>
+  :root {
+    --bg: #f7f9fc;
+    --card: #ffffff;
+    --ink: #17212b;
+    --muted: #526273;
+    --border: #d8e1eb;
+    --accent: #145388;
+    --accent-soft: #e8f1fa;
+    --code-bg: #161b22;
+    --code-fg: #e6edf3;
+    --ok: #137333;
+    --ok-bg: #e6f4ea;
+    --warn: #8a5300;
+    --warn-bg: #fef7e0;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.65;
+  }
+  header {
+    background: linear-gradient(135deg, #0f2c47 0%, #194d7a 100%);
+    color: #ffffff;
+    padding: 2rem 1.5rem 1.75rem;
+    border-bottom: 4px solid #388bfd;
+  }
+  header .wrap { max-width: 1180px; margin: 0 auto; }
+  header h1 { margin: 0 0 0.5rem; font-size: 1.8rem; line-height: 1.25; }
+  header p { margin: 0.25rem 0 0; color: #dbe9f6; max-width: 920px; }
+  nav.toc {
+    position: sticky; top: 0; z-index: 50; background: #ffffff;
+    border-bottom: 1px solid var(--border); padding: 0.55rem 1rem;
+    overflow-x: auto; white-space: nowrap; box-shadow: 0 2px 6px rgba(16, 24, 40, 0.04);
+  }
+  nav.toc .wrap { max-width: 1180px; margin: 0 auto; display: flex; gap: 0.55rem; flex-wrap: wrap; }
+  nav.toc a {
+    text-decoration: none; color: var(--accent); font-size: 0.85rem; font-weight: 600;
+    padding: 0.22rem 0.55rem; border-radius: 6px;
+  }
+  nav.toc a:hover { background: var(--accent-soft); }
+  main { max-width: 1180px; margin: 1.5rem auto 3rem; padding: 0 1.2rem; }
+  section.card {
+    background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+    padding: 1.4rem 1.6rem; margin-bottom: 1.25rem;
+    box-shadow: 0 1px 3px rgba(16, 24, 40, 0.04);
+  }
+  h2 { margin-top: 0; padding-bottom: 0.45rem; border-bottom: 2px solid var(--accent-soft); color: #0f2c47; font-size: 1.32rem; }
+  h3 { color: #194d7a; font-size: 1.05rem; margin: 1.1rem 0 0.45rem; }
+  .badge {
+    display: inline-block; font-size: 0.74rem; font-weight: 700;
+    padding: 0.14rem 0.48rem; border-radius: 999px; margin-right: 0.35rem;
+  }
+  .b-ok { background: var(--ok-bg); color: var(--ok); border: 1px solid #a7f3d0; }
+  .b-info { background: var(--accent-soft); color: var(--accent); border: 1px solid #bfdbfe; }
+  .b-warn { background: var(--warn-bg); color: var(--warn); border: 1px solid #fcd34d; }
+  .callout {
+    border-left: 4px solid var(--accent); background: #f2f7fc;
+    padding: 0.8rem 1rem; border-radius: 0 6px 6px 0; margin: 0.9rem 0;
+  }
+  .callout.ok { border-left-color: var(--ok); background: #f0fdf4; }
+  code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    font-size: 0.9em;
+    color: #0f172a;
+    background: #e9eff6;
+    padding: 0.12rem 0.34rem;
+    border-radius: 4px;
+  }
+  header code {
+    background: rgba(255, 255, 255, 0.18);
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.30);
+  }
+  pre {
+    background: var(--code-bg); color: var(--code-fg); padding: 0.95rem 1.1rem;
+    border-radius: 8px; overflow-x: auto; font-size: 0.84rem; line-height: 1.48; border: 1px solid #30363d;
+  }
+  pre code { background: transparent; padding: 0; color: inherit; font-size: inherit; border: none; }
+  table { width: 100%; border-collapse: collapse; margin: 0.85rem 0; font-size: 0.87rem; }
+  th, td { border: 1px solid var(--border); padding: 0.42rem 0.55rem; text-align: left; vertical-align: top; }
+  th { background: #eef4fa; color: #0f2c47; font-weight: 700; }
+  tr:nth-child(even) td { background: #fafcff; }
+  .math {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    color: #0f172a;
+    background: #f4f7fb; border: 1px solid #dde6f0; border-radius: 6px;
+    padding: 0.65rem 0.9rem; margin: 0.6rem 0; overflow-x: auto; font-size: 0.89rem;
+  }
+  .svg-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 8px; background: #fcfdff; padding: 0.75rem; margin: 0.8rem 0; }
+  footer { text-align: center; color: var(--muted); font-size: 0.85rem; padding: 1.5rem 1rem; }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <h1>RAR 1.5 Encrypted Archive Decryption &amp; Decompression Specification</h1>
+    <p>Complete 100% offline technical specification of the RAR 1.5 container parser, 5-word stream-cipher decryption, adaptive LZSS + canonical Huffman decompression (<code>0x30..0x35</code>), and CRC-32 / fail-closed security guards implemented in <code>tools/libcleanroom/</code> (<code>02-mit-library/</code>).</p>
+    <p style="margin-top:0.5rem;">
+      <span class="badge b-info">SPDX-License-Identifier: MIT</span>
+      <span class="badge b-ok">C99 Standalone | nm -u = 0 External Symbols</span>
+      <span class="badge b-warn">Scope: Non-Solid 0x30..0x35 (Fail-Closed on SOLID / Splits / Zip-Slip)</span>
+    </p>
+  </div>
+</header>
+
+<nav class="toc">
+  <div class="wrap">
+    <a href="#p1">1. End-to-End Pipeline</a>
+    <a href="#p2">2. Container &amp; Security</a>
+    <a href="#p3">3. Stream Decryption</a>
+    <a href="#p4">4. Decompression (0x30..0x35)</a>
+    <a href="#p5">5. CRC-32 &amp; Error Codes</a>
+    <a href="#p6">6. Fixtures &amp; Provenance</a>
+  </div>
+</nav>
+
+<main>
+
+<section id="p1" class="card">
+  <h2>1. End-to-End Encrypted Extraction Pipeline</h2>
+  <p>Encrypted RAR 1.5 entries follow a <strong>Compress-then-Encrypt</strong> design: each independent file entry compresses plaintext first and XORs the resulting <code>PACK_SIZE</code> stream with a password keystream. Extraction therefore always proceeds in 5 strict stages: <strong>Container Parse -&gt; Security Gate -&gt; Keystream XOR Decryption -&gt; Decompression -&gt; Plaintext CRC-32 Verification</strong>.</p>
+  <div class="svg-wrap">
+    <svg viewBox="0 0 1060 220" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="RAR 1.5 Extraction Pipeline">
+      <defs>
+        <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 1 L 10 5 L 0 9 z" fill="#145388"/>
+        </marker>
+      </defs>
+      <rect x="14" y="34" width="185" height="106" rx="8" fill="#eef4fa" stroke="#145388" stroke-width="1.5"/>
+      <text x="26" y="56" font-size="12" font-weight="700" fill="#145388">1. Container Parse</text>
+      <text x="26" y="75" font-size="11" fill="#17212b">rar15_list()</text>
+      <text x="26" y="93" font-size="11" fill="#17212b">Magic: Rar!\x1a\x07\x00</text>
+      <text x="26" y="111" font-size="11" fill="#17212b">head_size &gt;= 11/32 guards</text>
+      <text x="26" y="129" font-size="11" fill="#526273">Locate PACK_SIZE region</text>
+
+      <line x1="199" y1="87" x2="225" y2="87" stroke="#145388" stroke-width="2" marker-end="url(#arrow)"/>
+
+      <rect x="229" y="34" width="185" height="106" rx="8" fill="#fef7e0" stroke="#b45309" stroke-width="1.5"/>
+      <text x="241" y="56" font-size="12" font-weight="700" fill="#8a5300">2. Security Gate</text>
+      <text x="241" y="75" font-size="11" fill="#17212b">Reject SPLIT/SOLID/LARGE</text>
+      <text x="241" y="93" font-size="11" fill="#17212b">Reject DIR (0x00E0)</text>
+      <text x="241" y="111" font-size="11" fill="#17212b">Zip-Slip is_safe_rel_path</text>
+      <text x="241" y="129" font-size="11" fill="#526273">Method must be 0x30..0x35</text>
+
+      <line x1="414" y1="87" x2="440" y2="87" stroke="#145388" stroke-width="2" marker-end="url(#arrow)"/>
+
+      <rect x="444" y="34" width="195" height="106" rx="8" fill="#eef4fa" stroke="#145388" stroke-width="1.5"/>
+      <text x="456" y="56" font-size="12" font-weight="700" fill="#145388">3. Stream Decryption</text>
+      <text x="456" y="75" font-size="11" fill="#17212b">if flags &amp; 0x0004:</text>
+      <text x="456" y="93" font-size="11" fill="#17212b">rar15_keystream(pw[:77])</text>
+      <text x="456" y="111" font-size="11" fill="#17212b">packed[i] ^= ks[i]</text>
+      <text x="456" y="129" font-size="11" fill="#526273">Reset at byte 0 per entry</text>
+
+      <line x1="639" y1="87" x2="665" y2="87" stroke="#145388" stroke-width="2" marker-end="url(#arrow)"/>
+
+      <rect x="669" y="34" width="195" height="106" rx="8" fill="#eef4fa" stroke="#145388" stroke-width="1.5"/>
+      <text x="681" y="56" font-size="12" font-weight="700" fill="#145388">4. Decompress (Unpack)</text>
+      <text x="681" y="75" font-size="11" fill="#17212b">0x30: memcpy passthrough</text>
+      <text x="681" y="93" font-size="11" fill="#17212b">0x31..0x35: u15_init +</text>
+      <text x="681" y="111" font-size="11" fill="#17212b">Adaptive LZSS &amp; Huffman</text>
+      <text x="681" y="129" font-size="11" fill="#526273">Exact UNP_SIZE bytes out</text>
+
+      <line x1="864" y1="87" x2="890" y2="87" stroke="#137333" stroke-width="2" marker-end="url(#arrow)"/>
+
+      <rect x="894" y="34" width="152" height="106" rx="8" fill="#e6f4ea" stroke="#137333" stroke-width="1.5"/>
+      <text x="906" y="56" font-size="12" font-weight="700" fill="#137333">5. Integrity</text>
+      <text x="906" y="75" font-size="11" fill="#17212b">rar15_crc32(plain)</text>
+      <text x="906" y="93" font-size="11" fill="#17212b">== FILE_CRC</text>
+      <text x="906" y="111" font-size="11" fill="#17212b">Write safe output</text>
+      <text x="906" y="129" font-size="11" fill="#137333">Else fail closed</text>
+
+      <text x="16" y="176" font-size="12" font-weight="700" fill="#0f2c47">Wrong Password / Tampered Archive:</text>
+      <text x="16" y="196" font-size="11.5" fill="#526273">Wrong keystream produces random packed bitstream -&gt; fails u15_unpack (U15_E_TRUNCATED / U15_E_UNOBSERVED / short size) OR fails FILE_CRC check -&gt; zero invalid output written.</text>
+    </svg>
+  </div>
+  <p>For the clean-room black-box algebraic derivation of the keystream generator (<code>rar15_keystream</code>) itself, see <a href="RAR15-DERIVATION-GUIDE.html">RAR15-DERIVATION-GUIDE.html</a> (and the Markdown counterpart of this specification in <a href="RAR15-DECRYPT-UNPACK-SPEC.md">RAR15-DECRYPT-UNPACK-SPEC.md</a>).</p>
+</section>
+
+<section id="p2" class="card">
+  <h2>2. Container Parsing, Bounds Guards &amp; Security Controls (<code>rar15_container.c</code>, <code>rarextract.c</code>)</h2>
+  <p>All multi-byte integer fields are little-endian. Generic blocks follow immediately after the 7-byte signature <code>Rar!\x1a\x07\x00</code> (hex <code>52 61 72 21 1a 07 00</code>).</p>
+  <table>
+    <thead><tr><th>Offset</th><th>Size</th><th>Field</th><th>Semantics &amp; Bounds Validation</th></tr></thead>
+    <tbody>
+      <tr><td><code>0..6</code></td><td><code>7</code></td><td>Generic Header</td><td><code>HEAD_CRC(2) | HEAD_TYPE(1) | HEAD_FLAGS(2) | HEAD_SIZE(2)</code>; requires <code>head_size &gt;= 7</code> &amp;&amp; <code>head_size &lt;= arc_len - p</code></td></tr>
+      <tr><td><code>7..10</code></td><td><code>4</code></td><td><code>PACK_SIZE</code> / <code>ADD_SIZE</code></td><td>Present iff <code>type == 0x74</code> or <code>flags &amp; 0x8000</code>; must pre-check <code>head_size &gt;= 11</code> and <code>add_size &lt;= arc_len - p - head_size</code> to prevent OOB / wraparound</td></tr>
+      <tr><td><code>11..25</code></td><td><code>15</code></td><td>Metadata &amp; Method</td><td><code>UNP_SIZE(4) | HOST_OS(1) | FILE_CRC(4) | FTIME(4) | UNP_VER(1) | METHOD(1)</code></td></tr>
+      <tr><td><code>26..31</code></td><td><code>6</code></td><td>Name Length &amp; Attr</td><td><code>NAME_SIZE(2) | ATTR(4)</code>; checks <code>head_size &gt;= 32</code> and <code>name_size &lt;= head_size - 32</code></td></tr>
+      <tr><td><code>32..</code></td><td><code>NAME_SIZE</code></td><td><code>NAME</code></td><td><code>is_safe_rel_path()</code> rejects empty names, <code>.</code>, <code>..</code>, leading <code>/</code>, <code>\</code>, <code>:</code>, and control bytes (<code>&lt; 0x20</code>)</td></tr>
+    </tbody>
+  </table>
+  <ul>
+    <li><strong>Supported / Rejected Flags</strong>: Supports <code>0x0004 (PASSWORD)</code>; fails closed on <code>0x0001 (SPLIT_BEFORE)</code>, <code>0x0002 (SPLIT_AFTER)</code>, <code>0x0010 (SOLID)</code>, <code>0x0100 (LARGE)</code>, and directory entries (<code>(flags &amp; 0x00E0) == 0x00E0</code>).</li>
+  </ul>
+</section>
+
+<section id="p3" class="card">
+  <h2>3. Stream Cipher Decryption (<code>rar15_cipher.c</code>)</h2>
+  <p>When <code>flags &amp; 0x0004</code> is set, the <code>PACK_SIZE</code> payload starting at <code>block + head_size</code> is XORed with <code>rar15_keystream(pw, ks, PACK_SIZE)</code>. Each non-solid file entry resets the keystream generator at byte index <code>0</code>.</p>
+  <div class="math">1. Effective prefix e = pw[:77] (unsigned uint8_t c in 0..255), T_ref = IEEE 802.3 CRC-32 table (0xEDB88320, built on stack)
+2. Key schedule: R = unfinalized_crc32(e), H = sum((T_ref[c] &gt;&gt; 16) + c) mod 2^16, S_0 = 0xFFFF ^ XOR((T_ref[c] &amp; 0xFFFF) ^ c)
+3. Init state: W = R &amp; 0xFFFF, M = rol16((R &gt;&gt; 16) &amp; 0xFFFF, 1), K2 = 0xFFFF, Hr = H, S = S_0
+4. Step i = 0..PACK_SIZE-1:
+     W = (W + 0x1234) &amp; 0xFFFF;   t = T_ref[(W &gt;&gt; 1) &amp; 0xFF]
+     S = (S + (t &gt;&gt; 16)) &amp; 0xFFFF
+     M = ror16(M, 2) ^ ror16(t &amp; 0xFFFF, 1)
+     K2 ^= M;   Hr = ror16(Hr, 2);   W ^= (S ^ Hr ^ K2)
+     packed[i] ^= (W &gt;&gt; 8) &amp; 0xFF</div>
+</section>
+
+<section id="p4" class="card">
+  <h2>4. Decompression Algorithms (<code>rar15_unpack.c</code> &amp; <code>u15_unpack.{h,c}</code>)</h2>
+  <p><code>rar15_unpack(method, in, in_len, out, out_len)</code> reconstructs exact plaintext of size <code>UNP_SIZE</code>. Method <code>0x30</code> is raw Store passthrough; <strong>all five compressed methods <code>0x31..0x35</code> share a single decoder (<code>u15_unpack</code>)</strong> because encoder presets <code>-m1..-m5</code> vary compression search effort rather than bitstream grammar.</p>
+
+  <div class="svg-wrap">
+    <svg viewBox="0 0 1060 250" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="u15_unpack Decoder State Machine">
+      <defs>
+        <marker id="arr2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 1 L 10 5 L 0 9 z" fill="#145388"/>
+        </marker>
+      </defs>
+      <rect x="16" y="24" width="215" height="90" rx="8" fill="#fef7e0" stroke="#b45309" stroke-width="1.5"/>
+      <text x="28" y="46" font-size="12" font-weight="700" fill="#8a5300">Flag Byte &amp; Mode Dispatch</text>
+      <text x="28" y="65" font-size="11" fill="#17212b">fleft == 0: read T1 + flag list</text>
+      <text x="28" y="83" font-size="11" fill="#17212b">run &gt;= 17 -&gt; enter lmode</text>
+      <text x="28" y="101" font-size="11" fill="#17212b">Else 1~2 bits (f, k) w/ swapped</text>
+
+      <line x1="231" y1="50" x2="290" y2="50" stroke="#145388" stroke-width="2" marker-end="url(#arr2)"/>
+      <line x1="231" y1="80" x2="290" y2="115" stroke="#145388" stroke-width="2" marker-end="url(#arr2)"/>
+      <line x1="123" y1="114" x2="123" y2="155" stroke="#145388" stroke-width="2" marker-end="url(#arr2)"/>
+
+      <rect x="294" y="16" width="245" height="68" rx="8" fill="#eef4fa" stroke="#145388" stroke-width="1.5"/>
+      <text x="306" y="38" font-size="12" font-weight="700" fill="#145388">Literal Token</text>
+      <text x="306" y="56" font-size="11" fill="#17212b">lit_table(S) in {TL,T0,T1,T2,T3} + lit list</text>
+      <text x="306" y="73" font-size="11" fill="#526273">S += r - 53 - (S&gt;&gt;8); kind_step(false)</text>
+
+      <rect x="294" y="96" width="245" height="72" rx="8" fill="#eef4fa" stroke="#145388" stroke-width="1.5"/>
+      <text x="306" y="118" font-size="12" font-weight="700" fill="#145388">P-Match (step_p) / Q-Match (step_q)</text>
+      <text x="306" y="136" font-size="11" fill="#17212b">P: ky(3 len layouts) + kd(TL/T0/T1 blk + 7b)</text>
+      <text x="306" y="154" font-size="11" fill="#17212b">Q: QA/QB/QAF/QBF -&gt; dlist | step_r | Q_FAR | rep</text>
+
+      <rect x="16" y="159" width="245" height="72" rx="8" fill="#f3e8ff" stroke="#5b21b6" stroke-width="1.5"/>
+      <text x="28" y="181" font-size="12" font-weight="700" fill="#5b21b6">Literal Mode (step_lmode)</text>
+      <text x="28" y="199" font-size="11" fill="#17212b">idx &gt;= 1: literal(idx - 1)</text>
+      <text x="28" y="217" font-size="11" fill="#17212b">idx == 0: bit 1=exit; bit 0=3..4B short match</text>
+
+      <line x1="539" y1="50" x2="600" y2="102" stroke="#137333" stroke-width="2" marker-end="url(#arr2)"/>
+      <line x1="539" y1="132" x2="600" y2="122" stroke="#137333" stroke-width="2" marker-end="url(#arr2)"/>
+      <line x1="261" y1="195" x2="600" y2="145" stroke="#137333" stroke-width="2" marker-end="url(#arr2)"/>
+
+      <rect x="604" y="42" width="440" height="162" rx="8" fill="#e6f4ea" stroke="#137333" stroke-width="1.5"/>
+      <text x="618" y="66" font-size="12.5" font-weight="700" fill="#137333">64 KiB Circular Window &amp; Adaptive State</text>
+      <text x="618" y="88" font-size="11.5" fill="#17212b">- win[65536]: copy(n, d) copies n bytes from total - d (0 if total &lt; d)</text>
+      <text x="618" y="108" font-size="11.5" fill="#17212b">- kind_step: U=144, kv=288, flips `swapped` on polarity shift (153 / 145)</text>
+      <text x="618" y="128" font-size="11.5" fill="#17212b">- Adaptive lists: lit(lim=161), flag(lim=255), block(lim=255), dlist[256]</text>
+      <text x="618" y="148" font-size="11.5" fill="#17212b">- Distance bonuses in step_p/step_r: d &lt;= 256 (+8 in P), d &gt; 8192 (+1 w/ pfar)</text>
+      <text x="618" y="168" font-size="11.5" fill="#17212b">- recent[4] MRU cache &amp; last_n/last_d repeat state (rep &gt;= 2 1-bit repeat)</text>
+      <text x="618" y="190" font-size="11" fill="#526273">Exact termination: loop while j.done &lt; UNP_SIZE; require produced == UNP_SIZE</text>
+    </svg>
+  </div>
+
+  <h3>4.1 11 Fixed Canonical Huffman Tables (<code>u15_unpack.c:15-34</code>)</h3>
+  <table>
+    <thead><tr><th>Code</th><th>MaxLen</th><th>Symbol Counts by Bit Length (<code>length:count</code>)</th><th>Role</th></tr></thead>
+    <tbody>
+      <tr><td><code>T0</code></td><td>12</td><td><code>5:4, 6:40, 7:16, 8:16, 9:4, 11:47, 12:130</code></td><td>Default literal / medium block high byte</td></tr>
+      <tr><td><code>T1</code></td><td>10</td><td><code>5:2, 6:5, 7:46, 8:64, 9:116, 10:24</code></td><td>High-freq literal, flag byte, <code>dlist</code>, <code>lmode</code> position</td></tr>
+      <tr><td><code>T2</code></td><td>10</td><td><code>6:2, 7:14, 8:202, 9:33, 10:6</code></td><td>Skewed literal table (<code>10590 &lt;= S &lt; 16758</code>)</td></tr>
+      <tr><td><code>T3</code></td><td>9</td><td><code>8:255, 9:2</code></td><td>Heavily skewed literal table (<code>S &gt;= 16758</code>)</td></tr>
+      <tr><td><code>TL</code></td><td>12</td><td><code>4:8, 5:8, 6:8, 7:9, 12:224</code></td><td>Low-entropy literal (<code>S &lt;= -9971</code>) / block (<code>kd &lt; 1799</code>)</td></tr>
+      <tr><td><code>CR</code></td><td>12</td><td><code>2:2, 3:1, 4:2, 5:2, 6:4, 7:5, 8:4, 9:4, 10:8, 12:224</code></td><td><code>step_r</code> &amp; <code>step_p(layout=1)</code> length</td></tr>
+      <tr><td><code>CC</code></td><td>12</td><td><code>3:5, 4:2, 5:2, 6:4, 7:5, 8:4, 9:4, 10:8, 11:2, 12:220</code></td><td><code>step_p(layout=2)</code> &amp; <code>Q_FAR</code> length</td></tr>
+      <tr><td><code>QA / QAF</code></td><td>8</td><td><code>QA: 1:1, 3:2, 4:3, 5:1, 6:1, 7:1, 8:2</code> (<code>QAF: 3:1, 4:5</code>)</td><td>Short-match branch (<code>qs &lt; 39</code>)</td></tr>
+      <tr><td><code>QB / QBF</code></td><td>6</td><td><code>QB: 2:1, 3:4, 4:3, 5:1, 6:2</code> (<code>QBF: 3:3, 4:5</code>)</td><td>Short-match branch (<code>qs &gt;= 39</code>)</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section id="p5" class="card">
+  <h2>5. CRC-32 Integrity Check &amp; Error Contract (<code>rar15_crc32.c</code>, <code>rar15.h</code>)</h2>
+  <p>Even after <code>u15_unpack</code> returns <code>U15_OK</code> with <code>produced == UNP_SIZE</code>, output is only written to disk when the IEEE 802.3 CRC-32 (<code>0xEDB88320</code>) of the reconstructed plaintext matches <code>FILE_CRC</code> bit-for-bit.</p>
+  <table>
+    <thead><tr><th>Status Code</th><th>Value</th><th>Condition</th></tr></thead>
+    <tbody>
+      <tr><td><code>RAR15_OK</code></td><td><code>0</code></td><td>Container parse, decryption, decompression, CRC-32 match, and write succeeded</td></tr>
+      <tr><td><code>RAR15_ERR_PARAM</code></td><td><code>-1</code></td><td>NULL pointer, unsafe archive output path (Zip-Slip), or write I/O error</td></tr>
+      <tr><td><code>RAR15_ERR_FORMAT</code></td><td><code>-2</code></td><td>Bad magic/header, <code>head_size &lt; 11/32</code>, wraparound overflow, truncated or unobserved Huffman code</td></tr>
+      <tr><td><code>RAR15_ERR_UNSUPPORTED</code></td><td><code>-3</code></td><td>Unsupported flags (<code>SPLIT/SOLID/LARGE/DIR</code>) or <code>METHOD</code> outside <code>0x30..0x35</code></td></tr>
+      <tr><td><code>RAR15_ERR_CRC</code></td><td><code>-5</code></td><td>Reconstructed plaintext CRC-32 does not equal <code>FILE_CRC</code> (fail closed on wrong password)</td></tr>
+      <tr><td><code>RAR15_ERR_BUFFER</code></td><td><code>-6</code></td><td>Insufficient keystream buffer or allocation failure</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section id="p6" class="card">
+  <h2>6. Gate Fixtures, Copyright Provenance &amp; Measured Method Matrix (<code>tests/fixtures/gate/</code>)</h2>
+  <div class="callout ok">
+    <strong>AI-Generated Synthetic Fixtures (Zero Copyright Conflict)</strong>: All three test fixtures (<code>T.TXT</code>, <code>I.PNG</code>, <code>X.EXE</code>) are <strong>AI-generated synthetic example files confirmed by the repository owner (<code>2026-11-23</code> / <code>2026-11-24</code>)</strong>. None contain third-party copyrightable works, commercial artwork, or commercial binaries, so full MIT publication is conflict-free.
+  </div>
+  <table>
+    <thead><tr><th>Filename</th><th>Kind</th><th>Plain Size</th><th>Plain CRC-32</th><th>Plain SHA-256</th><th>Provenance &amp; Rights</th></tr></thead>
+    <tbody><tr><td><code>T.TXT</code></td><td>Text</td><td><code>15,360</code> B</td><td><code>0xc2d40f28</code></td><td><code style='font-size:0.78em'>c0e95aceb33a2ebc079bd110e3e1b28e3e0664d8944ec4d9d525703d61562eee</code></td><td>AI-generated synthetic example (no copyright conflict)</td></tr>
+<tr><td><code>I.PNG</code></td><td>PNG Image</td><td><code>6,447</code> B</td><td><code>0x19cd3b82</code></td><td><code style='font-size:0.78em'>eb09fa49118607699bb85ad6f24400cdccec0dc019d40604274da2fa13275be7</code></td><td>AI-generated synthetic example (no copyright conflict)</td></tr>
+<tr><td><code>X.EXE</code></td><td>DOS Binary Sample</td><td><code>1,024</code> B</td><td><code>0x162a76f8</code></td><td><code style='font-size:0.78em'>e72c206a044108250eb7c236c536ef14214ed66b2352058b8dca0ab8f177adb1</code></td><td>AI-generated synthetic example (no copyright conflict)</td></tr></tbody>
+  </table>
+  <h3>Measured Encrypted <code>PACK_SIZE</code> Across <code>0x30..0x35</code> (<code>P4</code> Archives, <code>HEAD_FLAGS = 0x8004</code>)</h3>
+  <table>
+    <thead><tr><th>Method (<code>METHOD</code>)</th><th><code>T.TXT</code></th><th><code>I.PNG</code></th><th><code>X.EXE</code></th><th>Decompression Path</th></tr></thead>
+    <tbody><tr><td><code>0x30 (Store, -m0)</code></td><td><code>15,360</code> B</td><td><code>6,447</code> B</td><td><code>1,024</code> B</td><td><code>Passthrough memcpy</code></td></tr>
+<tr><td><code>0x31 (Fastest, -m1)</code></td><td><code>421</code> B</td><td><code>6,456</code> B</td><td><code>312</code> B</td><td><code>Adaptive LZSS + Canonical Huffman (u15_unpack)</code></td></tr>
+<tr><td><code>0x32 (Fast, -m2)</code></td><td><code>313</code> B</td><td><code>6,457</code> B</td><td><code>312</code> B</td><td><code>Adaptive LZSS + Canonical Huffman (u15_unpack)</code></td></tr>
+<tr><td><code>0x33 (Normal, -m3)</code></td><td><code>275</code> B</td><td><code>6,456</code> B</td><td><code>314</code> B</td><td><code>Adaptive LZSS + Canonical Huffman (u15_unpack)</code></td></tr>
+<tr><td><code>0x34 (Good, -m4)</code></td><td><code>273</code> B</td><td><code>6,457</code> B</td><td><code>314</code> B</td><td><code>Adaptive LZSS + Canonical Huffman (u15_unpack)</code></td></tr>
+<tr><td><code>0x35 (Best, -m5)</code></td><td><code>272</code> B</td><td><code>6,457</code> B</td><td><code>313</code> B</td><td><code>Adaptive LZSS + Canonical Huffman (u15_unpack)</code></td></tr></tbody>
+  </table>
+</section>
+
+</main>
+<footer>
+  fultaarc-cleanroom-rar15-enc3 | Offline RAR 1.5 Decryption &amp; Decompression Specification | SPDX-License-Identifier: MIT
+</footer>
+</body>
+</html>

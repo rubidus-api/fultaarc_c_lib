@@ -1,0 +1,9 @@
+# compress.txt - Unix compress (.Z) fixtures. Made by tests/tools/zenc.py and VALIDATED BY `gzip -d` (an
+# independent reference decoder) before commit; see docs/research/formats/compress.md and T017.
+# archive|entry|size|crc32
+cleared.Z|cleared|9000|f2bb2245
+multibump.Z|multibump|40000|3af12f5e
+nonblock.Z|nonblock|2700|7763f4e4
+text.Z|text|2700|7763f4e4
+tiny.Z|tiny|50|d6fcd2aa
+wide.Z|wide|300000|e3bd834f

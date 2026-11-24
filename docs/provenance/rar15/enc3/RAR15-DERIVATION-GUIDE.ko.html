@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RAR 1.5 Keystream Constructive Derivation Guide (Clean-Room Spec &amp; Interactive Lab)</title>
+<style>
+  :root {
+    --bg: #f7f9fc;
+    --card: #ffffff;
+    --ink: #17212b;
+    --muted: #526273;
+    --border: #d8e1eb;
+    --accent: #145388;
+    --accent-soft: #e8f1fa;
+    --code-bg: #161b22;
+    --code-fg: #e6edf3;
+    --ok: #137333;
+    --ok-bg: #e6f4ea;
+    --warn: #8a5300;
+    --warn-bg: #fef7e0;
+    --prior: #5b21b6;
+    --prior-bg: #f3e8ff;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans KR", "Malgun Gothic", sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.65;
+  }
+  header {
+    background: linear-gradient(135deg, #0f2c47 0%, #194d7a 100%);
+    color: #ffffff;
+    padding: 2rem 1.5rem 1.75rem;
+    border-bottom: 4px solid #388bfd;
+  }
+  header .wrap { max-width: 1180px; margin: 0 auto; }
+  header h1 { margin: 0 0 0.5rem; font-size: 1.85rem; line-height: 1.25; }
+  header p { margin: 0.25rem 0 0; color: #dbe9f6; max-width: 920px; }
+  nav.toc {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: #ffffff;
+    border-bottom: 1px solid var(--border);
+    padding: 0.55rem 1rem;
+    overflow-x: auto;
+    white-space: nowrap;
+    box-shadow: 0 2px 6px rgba(16, 24, 40, 0.04);
+  }
+  nav.toc .wrap { max-width: 1180px; margin: 0 auto; display: flex; gap: 0.55rem; flex-wrap: wrap; }
+  nav.toc a {
+    text-decoration: none;
+    color: var(--accent);
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 0.22rem 0.55rem;
+    border-radius: 6px;
+    border: 1px solid transparent;
+  }
+  nav.toc a:hover { background: var(--accent-soft); border-color: #b7d3ef; }
+  main { max-width: 1180px; margin: 1.5rem auto 3rem; padding: 0 1.2rem; }
+  section.card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.4rem 1.6rem;
+    margin-bottom: 1.25rem;
+    box-shadow: 0 1px 3px rgba(16, 24, 40, 0.04);
+  }
+  h2 {
+    margin-top: 0;
+    padding-bottom: 0.45rem;
+    border-bottom: 2px solid var(--accent-soft);
+    color: #0f2c47;
+    font-size: 1.32rem;
+  }
+  h3 { color: #194d7a; font-size: 1.05rem; margin: 1.15rem 0 0.45rem; }
+  .badge {
+    display: inline-block;
+    font-size: 0.74rem;
+    font-weight: 700;
+    padding: 0.14rem 0.48rem;
+    border-radius: 999px;
+    vertical-align: middle;
+    margin-right: 0.35rem;
+    letter-spacing: 0.02em;
+  }
+  .b-prior { background: var(--prior-bg); color: var(--prior); border: 1px solid #d8b4fe; }
+  .b-data { background: var(--accent-soft); color: var(--accent); border: 1px solid #bfdbfe; }
+  .b-ok { background: var(--ok-bg); color: var(--ok); border: 1px solid #a7f3d0; }
+  .b-warn { background: var(--warn-bg); color: var(--warn); border: 1px solid #fcd34d; }
+  .callout {
+    border-left: 4px solid var(--accent);
+    background: #f2f7fc;
+    padding: 0.8rem 1rem;
+    border-radius: 0 6px 6px 0;
+    margin: 0.9rem 0;
+  }
+  .callout.warn { border-left-color: #d97706; background: #fffbeb; }
+  .callout.ok { border-left-color: var(--ok); background: #f0fdf4; }
+  code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    font-size: 0.9em;
+    color: #0f172a;
+    background: #e9eff6;
+    padding: 0.12rem 0.34rem;
+    border-radius: 4px;
+  }
+  header code {
+    background: rgba(255, 255, 255, 0.18);
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.30);
+  }
+  pre {
+    background: var(--code-bg);
+    color: var(--code-fg);
+    padding: 0.95rem 1.1rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    font-size: 0.84rem;
+    line-height: 1.48;
+    border: 1px solid #30363d;
+  }
+  pre code { background: transparent; padding: 0; color: inherit; font-size: inherit; border: none; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0.85rem 0;
+    font-size: 0.87rem;
+  }
+  th, td {
+    border: 1px solid var(--border);
+    padding: 0.42rem 0.55rem;
+    text-align: left;
+    vertical-align: top;
+  }
+  th { background: #eef4fa; color: #0f2c47; font-weight: 700; }
+  tr:nth-child(even) td { background: #fafcff; }
+  .math {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    color: #0f172a;
+    background: #f4f7fb;
+    border: 1px solid #dde6f0;
+    border-radius: 6px;
+    padding: 0.65rem 0.9rem;
+    margin: 0.6rem 0;
+    overflow-x: auto;
+    font-size: 0.89rem;
+  }
+  .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 1rem; }
+  .svg-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 8px; background: #fcfdff; padding: 0.75rem; margin: 0.8rem 0; }
+  .lab-box {
+    border: 1px solid #c5d6e8;
+    border-radius: 8px;
+    padding: 1rem 1.1rem;
+    background: #f9fbfe;
+    margin-top: 0.75rem;
+  }
+  .lab-controls { display: flex; flex-wrap: wrap; gap: 0.65rem; align-items: center; margin-bottom: 0.75rem; }
+  input[type="text"], input[type="number"], select {
+    padding: 0.35rem 0.55rem;
+    border: 1px solid #b6c6d8;
+    border-radius: 6px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.88rem;
+  }
+  button {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 0.42rem 0.85rem;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 0.88rem;
+  }
+  button:hover { background: #0f3f69; }
+  .kv-strip { display: flex; flex-wrap: wrap; gap: 0.55rem; margin: 0.5rem 0; }
+  .kv-pill { background: #fff; border: 1px solid var(--border); border-radius: 6px; padding: 0.28rem 0.55rem; font-size: 0.83rem; }
+  footer { text-align: center; color: var(--muted); font-size: 0.85rem; padding: 1.5rem 1rem; }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <h1>RAR 1.5 Keystream Constructive Derivation Guide</h1>
+    <p>사람 또는 AI가 <strong>오직 블랙박스 입출력 질의(Oracle I/O)</strong>와 본 문서의 대수적 단계만으로 RAR 1.5 키스트림 생성기(<code>G(pw, n)</code>) 및 정확한 게이지 등가성(<code>Z<sub>2</sub><sup>4</sup></code> Orbit)을 처음부터 끝까지 직접 재유도·검증할 수 있도록 정리한 100% 오프라인 자립형 가이드입니다.</p>
+    <p style="margin-top:0.5rem;">
+      <span class="badge b-prior">APPROVED-PRIOR: RECALL-208 / RECALL-209</span>
+      <span class="badge b-data">DATA-DERIVED: Cycles 001..322 + Cycle 324 Constructive Solver</span>
+      <span class="badge b-ok">VERIFIED: 0 / 25,600 B Blind Holdout &amp; 6x Gate (600 / 600 PW)</span>
+    </p>
+  </div>
+</header>
+
+<nav class="toc">
+  <div class="wrap">
+    <a href="#s0">0. 블랙박스 가정</a>
+    <a href="#s1">1. Stage 0 &amp; 파이프라인</a>
+    <a href="#s2">2. Stage I (hr_rot)</a>
+    <a href="#s3">3. Stage II (F_2 비트 필링)</a>
+    <a href="#s4">4. Stage III &amp; Z_2^4 게이지</a>
+    <a href="#s5">5. Stage IV (S_0(bx) &amp; uint8)</a>
+    <a href="#s6">6. 최종 알고리즘 &amp; "a" 추적표</a>
+    <a href="#s7">7. 이중 대조군 &amp; 블라인드 검증</a>
+    <a href="#s8">8. 사람/AI 실행 청사진</a>
+    <a href="#s9">9. 오프라인 시뮬레이터</a>
+    <a href="#s10">10. 출처 경계 &amp; 부록</a>
+  </div>
+</nav>
+
+<main>
+
+<section id="s0" class="card">
+  <h2>0. 블랙박스 오라클 계약 및 출발 사실 (Phase 0)</h2>
+  <p>이 문서에서 타깃 프로그램(<code>RAR.EXE</code>)은 내부 바이너리·메모리·어셈블리를 전혀 열람하지 않는 순수 <strong>블랙박스 함수</strong> <code>O(pw, n) -&gt; bytes[n]</code>로 취급한다. 평문 전체가 <code>0x00</code>인 Store-mode(<code>-m0</code>) 아카이브의 암호화된 데이터 영역을 읽으면 곧바로 키스트림을 관측할 수 있다.</p>
+  <table>
+    <thead><tr><th>Stage 0 관측 사실</th><th>실험 근거 및 수치</th><th>유도에 미치는 제약</th></tr></thead>
+    <tbody>
+      <tr><td>결정적 키스트림 &amp; Store-mode XOR</td><td>동일 암호에서 파일명·타임스탬프·평문 무관; <code>stored = plain ^ ks</code> (60/60 + 20/20 검증)</td><td>순수 스트림 암호 <code>G(pw, n)</code> 모형화 가능</td></tr>
+      <tr><td>비밀번호 <strong>77바이트 절단</strong></td><td><code>pw[:77]</code>이 같고 뒤 바이트가 다른 77-접두 쌍에서 키스트림 100% 동일 (30/30 + 16/16 쌍)</td><td>유효 입력 도메인 <code>e = pw[:77]</code> 고정</td></tr>
+      <tr><td>압축 방식 공통 키스트림</td><td>Store(<code>0x30</code>) 및 압축 방식(<code>0x31..0x35</code>) 모두 동일 키스트림으로 복호화 (<code>108/108</code>)</td><td>생성기 1개만 복원하면 전 방식(<code>0x30..0x35</code>) 지원</td></tr>
+      <tr><td>Raw 바이트 도메인(<code>0x01..0xFF</code>)</td><td>DOS 셸 금지 8바이트를 제외한 <code>248/255</code> 단일 바이트 허용; 상위 바이트(<code>0x80..0xFF</code>) 포함</td><td>부호 있는 <code>int8_t</code> vs 무부호 <code>uint8_t</code> 판별 필수 (Stage IV)</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section id="s1" class="card">
+  <h2>1. 파이프라인 개요 &amp; Stage 0 (다항식·가중치·출발 가설 클래스)</h2>
+  <p>탐색 공간은 <strong>데이터로 유도된 대수적 불변량</strong>과 <strong>오너 승인 출발 가설(<code>AMENDMENT-2026-11-16</code>)</strong>만으로 닫힌 5-워드 파라미터 패밀리로 축소된다. (정답 상수는 단 1개도 가정하지 않는다.)</p>
+  <ul>
+    <li><span class="badge b-data">DATA-DERIVED</span> <strong>선형 CRC-32 구조(<code>Cycle 208</code>)</strong>: 고정 길이 차분 커널의 F<sub>2</sub> 역방향 점화식이 33차 다항식 <code>0x30D4326D9 = (x + 1) * 0x104C11DB7</code>을 소거하며, 32차 원시 인자 <code>0x104C11DB7</code>이 출현한다.</li>
+    <li><span class="badge b-prior">APPROVED-PRIOR</span> <strong><code>RECALL-208 / RECALL-209</code></strong>: <code>Cycle 208</code>의 <code>0x104C11DB7</code>을 표준 IEEE 802.3 반사 CRC-32 테이블 <code>T_ref</code>(<code>0xEDB88320</code>)로 해석하고, 소형 16비트 워드 상태 기계(물리적 레지스터 주장이 아닌 수학적 모형 클래스)를 탐색 출발점으로 삼는다.</li>
+    <li><span class="badge b-data">DATA-DERIVED</span> <strong><code>Cycle 238/239</code> 가중치 소거 &amp; CRC 최하위 비트 불변성(<code>Cycle 259/265</code>)</strong>: 경험적 승수 <code>3573</code>의 모듈러 역수 <code>(-3573) * 0x89A3 == 1 (mod 2<sup>16</sup>)</code>을 곱하면 모든 256바이트 가중치가 <code>H = sum_{c in e} ((T_ref[c] &gt;&gt; 16) + c) mod 2<sup>16</sup></code>로 붕괴한다. 또한 <code>(crc &gt;&gt; 1, bx, acc &gt;&gt; 1)</code>이 첫 512바이트를 결정하며 <code>R &amp; 1</code>(CRC 비트 0)은 출력에 전혀 영향을 주지 않는다.</li>
+  </ul>
+
+  <div class="svg-wrap">
+    <svg viewBox="0 0 1060 300" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="4-Stage Constructive Derivation Pipeline and 5-Word Keystream Machine">
+      <defs>
+        <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 1 L 10 5 L 0 9 z" fill="#145388"/>
+        </marker>
+      </defs>
+      <text x="16" y="24" font-size="14" font-weight="700" fill="#0f2c47">(a) 4-Stage Constructive Peeling Pipeline (Cycle 324: Zero Hardcoded Target Constants)</text>
+      <rect x="16" y="38" width="225" height="92" rx="8" fill="#eef4fa" stroke="#145388" stroke-width="1.5"/>
+      <text x="28" y="60" font-size="12" font-weight="700" fill="#145388">Stage I: c248 Fibres</text>
+      <text x="28" y="79" font-size="11" fill="#17212b">Const (R, bx): 5,888 pairs</text>
+      <text x="28" y="96" font-size="11" fill="#17212b">Exhaustive r_h in 0..15</text>
+      <text x="28" y="116" font-size="12" font-weight="700" fill="#137333">-&gt; unique hr_rot = 2</text>
+
+      <line x1="241" y1="84" x2="275" y2="84" stroke="#145388" stroke-width="2" marker-end="url(#arr)"/>
+
+      <rect x="279" y="38" width="245" height="92" rx="8" fill="#eef4fa" stroke="#145388" stroke-width="1.5"/>
+      <text x="291" y="60" font-size="12" font-weight="700" fill="#145388">Stage II: c239 GF(2) Peeling</text>
+      <text x="291" y="79" font-size="11" fill="#17212b">Left-nullspace K (dim &gt;= 217)</text>
+      <text x="291" y="96" font-size="11" fill="#17212b">Bit k=8..15 -&gt; add_c mod 2^15</text>
+      <text x="291" y="116" font-size="12" font-weight="700" fill="#137333">-&gt; 0x1234, [0x7200..0x7220], m1=1, t=1</text>
+
+      <line x1="524" y1="84" x2="558" y2="84" stroke="#145388" stroke-width="2" marker-end="url(#arr)"/>
+
+      <rect x="562" y="38" width="235" height="92" rx="8" fill="#eef4fa" stroke="#145388" stroke-width="1.5"/>
+      <text x="574" y="60" font-size="12" font-weight="700" fill="#145388">Stage III: Byte 1 + Z_2^4 Orbit</text>
+      <text x="574" y="79" font-size="11" fill="#17212b">W1 hi = out[0]; 33x128 scan</text>
+      <text x="574" y="96" font-size="11" fill="#17212b">4,096-tuple 16-byte verify</text>
+      <text x="574" y="116" font-size="12" font-weight="700" fill="#137333">-&gt; m=2, t=1, acc=True, 8-orbit</text>
+
+      <line x1="797" y1="84" x2="831" y2="84" stroke="#145388" stroke-width="2" marker-end="url(#arr)"/>
+
+      <rect x="835" y="38" width="210" height="92" rx="8" fill="#e6f4ea" stroke="#137333" stroke-width="1.5"/>
+      <text x="847" y="60" font-size="12" font-weight="700" fill="#137333">Stage IV: c247 + k109</text>
+      <text x="847" y="79" font-size="11" fill="#17212b">128 bx bins x 65,536 scan</text>
+      <text x="847" y="96" font-size="11" fill="#17212b">Raw 0x80..0xFF uint8 check</text>
+      <text x="847" y="116" font-size="12" font-weight="700" fill="#137333">-&gt; S_0(c) = FFFF^T_LO[c]^c</text>
+
+      <text x="16" y="164" font-size="14" font-weight="700" fill="#0f2c47">(b) Derived 5-Word Live Keystream Recurrence G(pw, n)</text>
+      <rect x="16" y="178" width="220" height="106" rx="8" fill="#fef7e0" stroke="#b45309" stroke-width="1.5"/>
+      <text x="28" y="198" font-size="12" font-weight="700" fill="#8a5300">Key Schedule (e = pw[:77])</text>
+      <text x="28" y="218" font-size="11" fill="#17212b">R = crc32_unfinalized(e)</text>
+      <text x="28" y="236" font-size="11" fill="#17212b">H = sum((T_HI[c] + c)) mod 2^16</text>
+      <text x="28" y="254" font-size="11" fill="#17212b">S_0 = 0xFFFF ^ XOR(T_LO[c] ^ c)</text>
+      <text x="28" y="272" font-size="11" fill="#526273">W=R_LO, M=rol16(R_HI,1), K2=FFFF</text>
+
+      <line x1="236" y1="231" x2="275" y2="231" stroke="#145388" stroke-width="2" marker-end="url(#arr)"/>
+
+      <rect x="279" y="178" width="535" height="106" rx="8" fill="#ffffff" stroke="#145388" stroke-width="1.5"/>
+      <text x="293" y="198" font-size="12" font-weight="700" fill="#145388">Per-Byte Step (i = 0 .. n-1)</text>
+      <text x="293" y="218" font-size="11.5" font-family="monospace" fill="#17212b">1. W' = (W + 0x1234) &amp; 0xFFFF;  u = (W' &gt;&gt; 1) &amp; 0xFF;  t = T_ref[u]</text>
+      <text x="293" y="237" font-size="11.5" font-family="monospace" fill="#17212b">2. S  = (S + (t &gt;&gt; 16)) &amp; 0xFFFF;  M = ror16(M, 2) ^ ror16(t &amp; FFFF, 1)</text>
+      <text x="293" y="256" font-size="11.5" font-family="monospace" fill="#17212b">3. K2 ^= M;   Hr = ror16(Hr, 2);   W_next = W' ^ S ^ Hr ^ K2</text>
+      <text x="293" y="274" font-size="11" fill="#526273">(Bit 0 never carries into u; Bit 15 never carries out of 16-bit additions =&gt; exact Z_2^4 orbit)</text>
+
+      <line x1="814" y1="231" x2="852" y2="231" stroke="#137333" stroke-width="2" marker-end="url(#arr)"/>
+
+      <rect x="856" y="198" width="188" height="66" rx="8" fill="#e6f4ea" stroke="#137333" stroke-width="1.5"/>
+      <text x="872" y="224" font-size="13" font-weight="700" fill="#137333">out[i] = W_next &gt;&gt; 8</text>
+      <text x="872" y="247" font-size="11" fill="#17212b">Exact RAR 1.5 Byte [i]</text>
+    </svg>
+  </div>
+
+  <h3>탐색 모형 패밀리(Parameterized Search Class)</h3>
+  <p><code>RECALL-208/209</code> 출발 클래스 하에서, 미지 파라미터는 유한 튜플 <code>theta = (hr_rot, add_c, m1_rot, m_rot, t_rot, acc_k2, K2_0, S_0(c))</code>다. 단계 I~IV는 <code>theta</code> 전체(2<sup>64</sup> 이상)를 무작정 탐색하지 않고, 관측 데이터 슬라이스를 직교 분리하여 각 단계가 최대 <strong>65,536개</strong> 후보 스캔만으로 끝나도록 분해한다.</p>
+</section>
+
+<section id="s2" class="card">
+  <h2>2. Stage I — 동일 <code>(R, b<sub>x</sub>)</code> 파이버로 <code>H</code> 회전량(<code>hr_rot</code>) 분리</h2>
+  <p>유효 비밀번호 접두어 <code>e = pw[:77]</code>에서 <code>R = crc32_unfinalized(e)</code>와 <code>b_x = XOR_{c in e} c</code>가 같도록 고른 비밀번호 집합(<code>work/c248/oracle.json</code>: <code>6,144</code>행, 동일 <code>(R, b_x)</code> 쌍 <code>5,888</code>개)을 잡는다. 같은 파이버 안에서는 <code>W_0, S_0, M_1, K_{2,1}, u_0</code>가 모두 같으므로 <code>out[0]</code>의 차이는 오직 <code>H</code>(덧셈 누산기)에서만 나온다.</p>
+  <div class="math">out^(a)[0] XOR out^(b)[0] == (ror16(H^(a), hr_rot) &gt;&gt; 8) XOR (ror16(H^(b), hr_rot) &gt;&gt; 8)</div>
+  <ul>
+    <li>16개 회전 후보 <code>hr_rot in 0..15</code>를 전수 대조하면 <strong>오직 <code>hr_rot = 2</code>만 <code>0</code> 오차</strong>를 내며 차선 후보는 <code>5,857</code>개 쌍에서 즉시 기각된다.</li>
+    <li>따라서 첫 바이트에서 <code>H</code>의 기여분을 <code>Y_0 = out[0] ^ (ror16(H, 2) &gt;&gt; 8)</code>로 정확히 벗겨 낼 수 있다.</li>
+  </ul>
+  <pre><code># Stage I minimal reproducible recipe (requires only c248 constant-(R, bx) anchor pairs)
+survivors = []
+for hr_rot in range(16):
+    err = 0
+    for row_a, row_b in same_R_bx_pairs:
+        pred_diff = ((ror16(H(row_a), hr_rot) &gt;&gt; 8) ^ (ror16(H(row_b), hr_rot) &gt;&gt; 8))
+        if (row_a.out[0] ^ row_b.out[0]) != pred_diff:
+            err += 1
+    if err == 0:
+        survivors.append(hr_rot)
+# Result on c248 (5,888 pairs): survivors == [2], min_other_err == 5,857</code></pre>
+</section>
+
+<section id="s3" class="card">
+  <h2>3. Stage II — F<sub>2</sub> 좌영공간 비트 필링(<code>c239</code> Byte 0)</h2>
+  <p>이제 <code>b_x = 0x4c</code>로 고정된 비밀번호 2,095행(<code>work/c239/oracle.json</code>)을 사용해 미지의 상수 <code>s_0 = S_0(0x4c)</code>와 덧셈 상수 <code>add_c</code>를 복원한다. <code>R_LO = R &amp; 0xFFFF</code>, <code>R_HI = (R &gt;&gt; 16) &amp; 0xFFFF</code>, <code>u_0 = ((R_LO + add_c) &gt;&gt; 1) &amp; 0xFF</code>라 하자. <code>H</code>가 제거된 <code>Y_0</code>의 비트 <code>b in 0..7</code> (16비트 위치 <code>k = 8 + b</code>)은 다음 항등식을 만족한다.</p>
+  <div class="math">((Y_0 &gt;&gt; b) &amp; 1) XOR (((R_LO + add_c) &gt;&gt; k) &amp; 1) XOR (((s_0 + T_HI[u_0]) &gt;&gt; k) &amp; 1)
+  == (K_{2,1} &gt;&gt; k) &amp; 1  in  span_F2(1, R_HI[0..15], T_LO[u_0][0..15])   [33 columns]</div>
+  <ol>
+    <li><strong><code>b = 0</code> (비트 8) 전수 스캔</strong>: <code>250</code>행 위에서 <code>33</code>열 디자인 행렬 <code>X(u_0) = [1 | R_HI | T_LO[u_0]]</code>의 F<sub>2</sub> 좌영공간 기저 <code>K</code>(차원 <code>&gt;= 217</code>, 우연 일치 확률 ~ 2<sup>-217</sup>)를 구한다. 인덱스 <code>u_0</code>는 <code>add_c mod 512</code>에만 의존하므로 <code>(add_lo9 even, s0_lo8)</code> <code>256 * 256 = 65,536</code>쌍만 검사하면 된다. 결과는 <strong><code>392</code>개 생존자</strong> (<code>add_lo9 in ['0x134', '0x1b4', '0x34', '0xb4']</code>).</li>
+    <li><strong>순차 비트 필링 (<code>k = 9..15</code>)</strong>: 살아남은 392개에서 비트 9부터 비트 15까지 올라가며 <code>add_c</code>의 상위 비트와 <code>s_0</code>의 비트를 하나씩 확장·소거하면 <strong><code>add_c mod 2<sup>15</sup> = 0x1234</code>가 유일 확정</strong>되며, <code>s_0(0x4c) mod 2<sup>15</sup></code>는 정확히 <code>33</code>개 밴드 <strong><code>[0x7200 .. 0x7220]</code></strong>로 좁혀진다.</li>
+    <li><strong>33개 밴드가 생기는 대수적 이유</strong>: IEEE 802.3 테이블에서 <code>max_u (T_HI[u] &amp; 0xFF) == 0xDF</code>이므로 <code>s0_lo8 in [0x00 .. 0x20]</code> 범위에서는 <code>(T_HI[u] &amp; 0xFF) + s0_lo8 &lt;= 0xDF + 0x20 = 0xFF &lt; 256</code>가 되어 <strong>어떤 <code>u_0</code>에서도 비트 7 -&gt; 비트 8 캐리가 0</strong>이 된다. 따라서 바이트 0 단독으로는 <code>s0_lo8</code> 33개 값을 구분할 수 없고, 바이트 1(Stage III)이 필요하다.</li>
+    <li><strong><code>K<sub>2,1</sub></code> 회전 파라미터 복원</strong>: <code>Z_0 = Y_0 ^ ((R_LO + 0x1234) &gt;&gt; 8) ^ ((s_0 + T_HI[u_0]) &gt;&gt; 8)</code>을 2,095행 전체에서 검증하면 <code>stage2_z0_gf2_err == 0</code>이며, <code>16 x 16</code> 회전 쌍 <code>(m1_rot, t_rot)</code> 중 <strong>오직 <code>(m1_rot = 1, t_rot = 1, const_hi = 0x7f)</code>만 유일 생존</strong>한다.</li>
+  </ol>
+  <pre><code># Stage II peeling summary (pseudo-Python matching c324_constructive_bridge.py)
+# Step A (k=8): scan (add_lo9 in range(0, 512, 2)) x (s0_lo8 in range(256)) = 65,536 pairs
+#   reject whenever (left_nullspace(X(u0)) @ rhs_bit8) % 2 != 0  -&gt; 392 survivors
+# Step B (k=9..15): lift add_c bits 9..14 and s0 bits 8..14 one bit per round using rhs_bit(k)
+#   -&gt; unique add_c mod 2^15 = 0x1234, s0 mod 2^15 in [0x7200 .. 0x7220] (33 candidates)
+# Step C: check Z0 == ((ror16(rol16(R_HI, m1_rot) ^ ror16(T_LO[u0], t_rot) ^ K2_0)) &gt;&gt; 8)
+#   across all 16x16 (m1_rot, t_rot) -&gt; unique (m1_rot=1, t_rot=1, K2_0_hi=0x7F)</code></pre>
+</section>
+
+<section id="s4" class="card">
+  <h2>4. Stage III — Byte 1 필링 &amp; 블랙박스 <code>Z<sub>2</sub><sup>4</sup></code> 게이지 불변성 정리</h2>
+  <h3>4.1 Byte 1(<code>out[1]</code>)에서 <code>s0_lo8</code> 및 스텝 회전 유일 확정</h3>
+  <p>두 번째 스텝(<code>i = 1</code>)의 입력 워드 <code>W_1</code>의 상위 바이트는 이미 <strong>관측값 <code>out[0]</code> 그 자체</strong>다! <code>W_1</code>의 하위 바이트만 <code>R_LO, u_0, s0_lo8, k2_lo8</code>로 표현되므로, <code>u_1 = ((W_1 + add_c) &gt;&gt; 1) &amp; 0xFF</code> 역시 미지수 <code>s0_lo8 in [0x00..0x20]</code>(33개)과 짝수 <code>k2_lo8 in 0..254</code>(128개) <strong>총 <code>4,224</code>개 쌍</strong>만 스캔하면 결정된다.</p>
+  <ul>
+    <li>70행 위 <code>49</code>열 디자인 행렬 <code>span_F2(1, R_HI, T_LO[u_0], T_LO[u_1])</code>에서 <code>Y_1</code>의 하위 2비트를 검사하면 <strong>오직 <code>s0_lo8 = 0x08</code> + 짝지어진 <code>k2_lo8 in {0xFE, 0xFF}</code>만 통과</strong>한다.</li>
+    <li>이제 남은 미지수는 비트 15·비트 0 모호성 <code>2<sup>3</sup> = 8</code>가지, <code>acc_k2 in {False, True}</code>(누적 XOR <code>K2 ^= M</code> vs 비누적), 스텝 회전 <code>16 x 16 = 256</code>가지, 총 <strong><code>4,096</code>개 튜플</strong>뿐이다. 2,095행 x 16바이트 전체를 검증하면 <code>acc_k2 = True</code>, <code>m_rot = 2</code>, <code>t_rot = 1</code>이 유일 확정되며, 정확히 <strong><code>8</code>개 원소 궤도</strong>만 0오차로 살아남는다.</li>
+  </ul>
+
+  <h3>4.2 블랙박스 <code>Z<sub>2</sub><sup>4</sup></code> 게이지 등가성 정리 &amp; 패리티 붕괴 보조정리</h3>
+  <div class="callout ok">
+    <strong>Theorem (Exact Black-Box Z<sub>2</sub><sup>4</sup> Gauge Equivalence)</strong>: <code>add_c</code>가 <strong>짝수</strong>일 때, <code>(r, a, b, d) in {0,1}<sup>4</sup></code>에 대해 아래 16개 파라미터화는 <strong>모든 가능한 비밀번호 <code>pw</code>와 출력 길이 <code>n</code>에서 비트 단위로 완전히 동일한 키스트림을 생성</strong>한다.<br>
+    <code>(R ^ r,  0x1234 ^ (a &lt;&lt; 15),  S_0(c) ^ (b &lt;&lt; 15),  0x7FFE ^ ((a ^ b) &lt;&lt; 15) ^ d)</code>
+  </div>
+  <ul>
+    <li><strong>LSB 분리 (<code>r, d</code>)</strong>: <code>add_c</code>가 짝수이므로 덧셈 <code>W + add_c</code>는 비트 0에서 비트 1로 캐리를 생성하지 않는다. 따라서 <code>R[0]</code>(<code>r</code>) 또는 <code>K2_0[0]</code>(<code>d</code>)가 뒤집히면 매 스텝 <code>W</code>의 최하위 비트 0만 반전될 뿐, <code>u_i = ((W + add_c) &gt;&gt; 1) &amp; 0xFF</code>와 출력 <code>W &gt;&gt; 8</code>에는 영구히 영향이 0이다.</li>
+    <li><strong>MSB 무캐리 (<code>a, b</code>)</strong>: 16비트 모듈러 덧셈에서 최상위 비트 15(<code>0x8000</code>)는 더 높은 비트로 캐리 아웃이 없고 <code>(W + add_c) &gt;&gt; 1</code> 시프트로 빠져나가며 <code>K2</code>, <code>S</code>와의 XOR에만 선형 참여한다. 따라서 <code>add_c</code>의 MSB(<code>a</code>) 또는 <code>S_0</code>의 MSB(<code>b</code>)를 뒤집을 때 <code>K2_0</code>의 MSB를 <code>a ^ b</code>로 보상하면 모든 스텝의 <code>W' ^ S ^ Hr ^ K2</code>가 항등적으로 보존된다.</li>
+    <li><strong>따름정리 (Parity-Collapse Lemma)</strong>: 만약 실제 생성기의 <code>add_c</code>가 <strong>홀수</strong>(<code>add_c &amp; 1 == 1</code>)라면 <code>W[0] = 1</code>일 때 비트 0에서 비트 1로 캐리가 발생하여 <code>r, d</code>가 <code>u_i</code>와 즉시 결합한다. 그 결과 8-원소 궤도가 정확히 <strong>4개(MSB-only <code>Z<sub>2</sub><sup>2</sup></code>)로 붕괴</strong>한다! (이는 7절의 <code>Planted Odd 0x5A7D</code> 대조군으로 실증되었다.)</li>
+  </ul>
+  <table>
+    <thead><tr><th>#</th><th><code>add_c</code></th><th><code>S_0(0x4c)</code></th><th><code>K2_0</code></th><th>Gauge <code>(a, b, d)</code></th><th>비고</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td><code>0x1234</code></td><td><code>0x7208</code></td><td><code>0x7ffe</code></td><td><code>a=0, b=0, d=0</code></td><td>Solver Min</td></tr>
+<tr><td>2</td><td><code>0x1234</code></td><td><code>0x7208</code></td><td><code>0x7fff</code></td><td><code>a=0, b=0, d=1</code></td><td>Exact Equivalent</td></tr>
+<tr><td>3</td><td><code>0x1234</code></td><td><code>0xf208</code></td><td><code>0xfffe</code></td><td><code>a=0, b=1, d=0</code></td><td>Exact Equivalent</td></tr>
+<tr><td>4</td><td><code>0x1234</code></td><td><code>0xf208</code></td><td><code>0xffff</code></td><td><code>a=0, b=1, d=1</code></td><td>Canonical (Cycle 323 / libcleanroom)</td></tr>
+<tr><td>5</td><td><code>0x9234</code></td><td><code>0x7208</code></td><td><code>0xfffe</code></td><td><code>a=1, b=0, d=0</code></td><td>Exact Equivalent</td></tr>
+<tr><td>6</td><td><code>0x9234</code></td><td><code>0x7208</code></td><td><code>0xffff</code></td><td><code>a=1, b=0, d=1</code></td><td>Exact Equivalent</td></tr>
+<tr><td>7</td><td><code>0x9234</code></td><td><code>0xf208</code></td><td><code>0x7ffe</code></td><td><code>a=1, b=1, d=0</code></td><td>Exact Equivalent</td></tr>
+<tr><td>8</td><td><code>0x9234</code></td><td><code>0xf208</code></td><td><code>0x7fff</code></td><td><code>a=1, b=1, d=1</code></td><td>Exact Equivalent</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section id="s5" class="card">
+  <h2>5. Stage IV — 전 <code>128</code> <code>b<sub>x</sub></code> 구간 <code>S_0(b<sub>x</sub>)</code> &amp; <code>uint8_t</code> 부호 규명</h2>
+  <p>표준 게이지 대표원(<code>(a=0, b=1, d=1)</code> -&gt; <code>add_c = 0x1234</code>, <code>S_0(0x4c) = 0xF208</code>, <code>K2_0 = 0xFFFF</code>)을 고정한 뒤, 128개 <code>b_x in 0..127</code> 구간별로 나뉜 데이터셋(<code>work/c247/oracle.json</code>, 구간당 32행)에서 16비트 <code>s_0 in 0..65535</code>를 전수 스캔한다.</p>
+  <ul>
+    <li><strong><code>128 / 128</code> 전 구간 유일 해</strong>: 단 하나의 <code>b_x</code>에서도 동률(tie)이 발생하지 않으며(<code>stage4_non_unique_bins = []</code>), 복원된 128개 값은 <code>stage4_gf2_err_128 = 0</code>(완전 아핀 F<sub>2</sub> 함수)이며, 기저 7벡터(<code>0x3097, 0x612e, 0xc41d, 0x883a, 0x1074, 0x20e8, 0x41d0</code>) 및 영점 <code>S_0(0) = 0xFFFF</code>가 <strong><code>S_0(b_x) == 0xFFFF ^ (T_ref[b_x] &amp; 0xFFFF) ^ b_x</code>와 <code>128/128</code> 정확히 일치</strong>한다.</li>
+    <li><strong><code>0x80..0xFF</code> 원시 바이트(<code>k109</code>) 4-원소 분리 검증</strong>: 아카이브 코퍼스 <code>0007-k109_pw.json.gz</code>(400행)에서 <code>H</code>·<code>S_0</code> 계산 시 바이트 <code>c</code>를 무부호(<code>uint8_t</code>, <code>0..255</code>)로 다루는지 부호(<code>int8_t</code>, <code>-128..127</code>)로 다루는지, 그리고 <code>S_0(c)</code>에 <code>T_LO[c]</code>의 비트 7 이상(<code>c &gt;= 128</code>)이 들어가는지를 2x2 교차 검사한다.</li>
+  </ul>
+  <table>
+    <thead><tr><th>바이트 해석 조합</th><th><code>err_rows / 400</code></th><th><code>err_bytes / 25,600</code></th><th>판정</th></tr></thead>
+    <tbody>
+      <tr><td><strong><code>signed=False (uint8_t), full T_LO[c]</code></strong></td><td><strong><code>0</code></strong></td><td><strong><code>0</code></strong></td><td><span class="badge b-ok">UNIQUE EXACT</span></td></tr>
+      <tr><td><code>signed=False, T_LO[c &amp; 0x7F] (no bit7)</code></td><td><code>126</code></td><td><code>8,045</code></td><td>기각 (bit 7 반영 필수)</td></tr>
+      <tr><td><code>signed=True (int8_t), full T_LO[c]</code></td><td><code>240</code></td><td><code>15,302</code></td><td>기각 (signed 승격 오답)</td></tr>
+      <tr><td><code>signed=True (int8_t), no bit7</code></td><td><code>240</code></td><td><code>15,304</code></td><td>기각</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section id="s6" class="card">
+  <h2>6. 최종 알고리즘 명세, C99 참조 구현 및 검산 추적표</h2>
+  <div class="grid-2">
+    <div>
+      <h3>6.1 표준 C99 구현 (<code>tools/libcleanroom/src/rar15_cipher.c</code> 원문)</h3>
+      <p>전역 가변 상태와 외부 심볼 참조(<code>nm -u rar15_cipher.o</code> = 0) 없이 스택 지역 CRC-32 테이블로 완전 스레드 안전하게 구현된 코드다.</p>
+      <pre><code>/* rar15_cipher.c - RAR 1.5 stream cipher: block XOR + keystream generator.
+ *
+ * Implements rar15_decrypt_block and rar15_keystream in standalone clean-room C99 from
+ * mathematics alone using the IEEE 802.3 CRC-32 polynomial (0xEDB88320, generated from its
+ * definition on the stack for full reentrancy with zero global state or external libc calls)
+ * and the Cycle 323/324 verified key-schedule and 5-word (&lt;=54-bit initial) 16-bit recurrence --
+ * zero runtime oracle calls, zero stored keystreams, zero external/third-party archiver source.
+ *
+ * Provenance (Amendment 2026-11-16, Cycles 323-324):
+ *   APPROVED-PRIOR : RECALL-208 (small 16-bit word state hypothesis class, non-physical),
+ *                    RECALL-209 (IEEE 802.3 CRC-32 polynomial 0xEDB88320 candidate structure).
+ *   DATA-DERIVED   : 77-byte prefix truncation, unsigned byte promotion, R/H/S accumulators,
+ *                    5x16-bit live loop state (w, m, k2, hr, s_state), +0x1234 step,
+ *                    ror16(_,2)/ror16(_,1), K2^=M, W&gt;&gt;8; unique up to Cycle 324 Z_2^3/Z_2^4
+ *                    black-box gauge equivalence.
+ *
+ * SPDX-License-Identifier: MIT
+ */
+#include &quot;rar15.h&quot;
+
+static void build_crc32_table(uint32_t tbl[256]) {
+    for (uint32_t i = 0; i &lt; 256u; i++) {
+        uint32_t c = i;
+        for (int k = 0; k &lt; 8; k++)
+            c = (c &amp; 1u) ? (0xEDB88320u ^ (c &gt;&gt; 1)) : (c &gt;&gt; 1);
+        tbl[i] = c;
+    }
+}
+
+static uint16_t rol16(uint16_t x, unsigned r) {
+    r &amp;= 15u;
+    if (!r) return x;
+    return (uint16_t)((((uint32_t)x &lt;&lt; r) | ((uint32_t)x &gt;&gt; (16u - r))) &amp; 0xFFFFu);
+}
+
+static uint16_t ror16(uint16_t x, unsigned r) {
+    r &amp;= 15u;
+    if (!r) return x;
+    return (uint16_t)((((uint32_t)x &gt;&gt; r) | ((uint32_t)x &lt;&lt; (16u - r))) &amp; 0xFFFFu);
+}
+
+int rar15_decrypt_block(uint8_t *data, size_t data_len, const uint8_t *ks, size_t ks_len) {
+    if (!data || !ks) return RAR15_ERR_PARAM;
+    if (ks_len &lt; data_len) return RAR15_ERR_BUFFER;
+    for (size_t i = 0; i &lt; data_len; i++)
+        data[i] ^= ks[i];
+    return RAR15_OK;
+}
+
+size_t rar15_keystream(const char *password, uint8_t *out, size_t max_out) {
+    if (!password || !out || max_out == 0)
+        return 0;
+
+    uint32_t crc_tbl[256];
+    build_crc32_table(crc_tbl);
+
+    size_t plen = 0;
+    while (plen &lt; 77u &amp;&amp; password[plen] != &#x27;\0&#x27;)
+        plen++;
+
+    const uint8_t *pw = (const uint8_t *)password;
+    uint32_t r_state = 0xFFFFFFFFu;
+    uint16_t h_state = 0u;
+    uint16_t s_state = 0xFFFFu;
+    for (size_t i = 0; i &lt; plen; i++) {
+        uint8_t c = pw[i];
+        r_state = (r_state &gt;&gt; 8) ^ crc_tbl[(r_state ^ c) &amp; 0xFFu];
+        h_state = (uint16_t)(h_state + (uint16_t)(crc_tbl[c] &gt;&gt; 16) + (uint16_t)c);
+        s_state ^= (uint16_t)((crc_tbl[c] &amp; 0xFFFFu) ^ (uint16_t)c);
+    }
+
+    uint16_t w = (uint16_t)(r_state &amp; 0xFFFFu);
+    uint16_t m = rol16((uint16_t)((r_state &gt;&gt; 16) &amp; 0xFFFFu), 1u);
+    uint16_t k2 = 0xFFFFu;
+    uint16_t hr = h_state;
+
+    for (size_t i = 0; i &lt; max_out; i++) {
+        w = (uint16_t)(w + 0x1234u);
+        uint32_t t = crc_tbl[(w &gt;&gt; 1) &amp; 0xFFu];
+        s_state = (uint16_t)(s_state + (uint16_t)(t &gt;&gt; 16));
+        m = (uint16_t)(ror16(m, 2u) ^ ror16((uint16_t)(t &amp; 0xFFFFu), 1u));
+        k2 ^= m;
+        hr = ror16(hr, 2u);
+        w ^= (uint16_t)(s_state ^ hr ^ k2);
+        out[i] = (uint8_t)(w &gt;&gt; 8);
+    }
+    return max_out;
+}
+</code></pre>
+    </div>
+    <div>
+      <h3>6.2 검증용 테스트 벡터</h3>
+      <ul>
+        <li><code>pw = b"a"</code> (<code>0x61</code>, 16B):<br>
+          초기 상태: <code>R=0x174841bc, H=0x3b16, S_0=0xae50, W=0x41bc, M=0x2e90, K2=0xffff</code><br>
+          출력 hex: <code>752fa544495d1c9257bd3d4d73a4f54b</code>
+        </li>
+        <li><code>pw = b"abc"</code> (16B):<br>
+          초기 상태: <code>R=0xcadbbe3d, H=0xb452, S_0=0x9ec7</code><br>
+          출력 hex: <code>fdba8b6197e7b70832f745b9c16df7b0</code>
+        </li>
+        <li><code>pw = bytes([0x80, 0xFF])</code> (원시 비ASCII 2B, 16B):<br>
+          초기 상태: <code>R=0xa8a79ac6, H=0x1c39, S_0=0x932d</code><br>
+          출력 hex: <code>87fb039f8820be70651dfaa047720dfb</code>
+        </li>
+      </ul>
+      <h3>6.3 <code>pw = "a"</code> 첫 8스텝 상세 상태 추적표</h3>
+      <div style="overflow-x:auto;">
+      <table>
+        <thead><tr><th><code>i</code></th><th><code>W_in</code></th><th><code>W+1234</code></th><th><code>u</code></th><th><code>T_ref[u]</code></th><th><code>S</code></th><th><code>M</code></th><th><code>K2</code></th><th><code>Hr</code></th><th><code>W_out</code></th><th><code>out[i]</code></th></tr></thead>
+        <tbody>
+          <tr><td>0</td><td><code>0x41bc</code></td><td><code>0x53f0</code></td><td><code>0xf8</code></td><td><code>0xb3667a2e</code></td><td><code>0x61b6</code></td><td><code>0x36b3</code></td><td><code>0xc94c</code></td><td><code>0x8ec5</code></td><td><code>0x75cf</code></td><td><strong><code>0x75</code></strong></td></tr>
+<tr><td>1</td><td><code>0x75cf</code></td><td><code>0x8803</code></td><td><code>0x01</code></td><td><code>0x77073096</code></td><td><code>0xd8bd</code></td><td><code>0xd5e7</code></td><td><code>0x1cab</code></td><td><code>0x63b1</code></td><td><code>0x2fa4</code></td><td><strong><code>0x2f</code></strong></td></tr>
+<tr><td>2</td><td><code>0x2fa4</code></td><td><code>0x41d8</code></td><td><code>0xec</code></td><td><code>0xa9bcae53</code></td><td><code>0x8279</code></td><td><code>0x2250</code></td><td><code>0x3efb</code></td><td><code>0x58ec</code></td><td><code>0xa5b6</code></td><td><strong><code>0xa5</code></strong></td></tr>
+<tr><td>3</td><td><code>0xa5b6</code></td><td><code>0xb7ea</code></td><td><code>0xf5</code></td><td><code>0xcdd70693</code></td><td><code>0x5050</code></td><td><code>0x8bdd</code></td><td><code>0xb526</code></td><td><code>0x163b</code></td><td><code>0x44a7</code></td><td><strong><code>0x44</code></strong></td></tr>
+<tr><td>4</td><td><code>0x44a7</code></td><td><code>0x56db</code></td><td><code>0x6d</code></td><td><code>0x33031de5</code></td><td><code>0x8353</code></td><td><code>0xec05</code></td><td><code>0x5923</code></td><td><code>0xc58e</code></td><td><code>0x4925</code></td><td><strong><code>0x49</code></strong></td></tr>
+<tr><td>5</td><td><code>0x4925</code></td><td><code>0x5b59</code></td><td><code>0xac</code></td><td><code>0xdf60efc3</code></td><td><code>0x62b3</code></td><td><code>0x8ce0</code></td><td><code>0xd5c3</code></td><td><code>0xb163</code></td><td><code>0x5d4a</code></td><td><strong><code>0x5d</code></strong></td></tr>
+<tr><td>6</td><td><code>0x5d4a</code></td><td><code>0x6f7e</code></td><td><code>0xbf</code></td><td><code>0x5bdeae1d</code></td><td><code>0xbe91</code></td><td><code>0xf436</code></td><td><code>0x21f5</code></td><td><code>0xec58</code></td><td><code>0x1c42</code></td><td><strong><code>0x1c</code></strong></td></tr>
+<tr><td>7</td><td><code>0x1c42</code></td><td><code>0x2e76</code></td><td><code>0x3b</code></td><td><code>0xb10be924</code></td><td><code>0x6f9c</code></td><td><code>0xc99f</code></td><td><code>0xe86a</code></td><td><code>0x3b16</code></td><td><code>0x9296</code></td><td><strong><code>0x92</code></strong></td></tr>
+        </tbody>
+      </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="s7" class="card">
+  <h2>7. 이중 대조군(Planted Positive/Negative) &amp; 미관측 블라인드 검증 요약</h2>
+  <p>솔버 코드가 특정 타깃 상수에 과적합(또는 우연 일치)되지 않았음을 보이기 위해, 동일한 제로-하드코딩 솔버에 <strong>임의의 합성 파라미터(Planted Even / Planted Odd)</strong>와 <strong>4종 음성 대조군</strong>을 통과시켰다.</p>
+  <div class="grid-2">
+    <div>
+      <h3>Planted Positive Controls (<code>controls.json</code>)</h3>
+      <ul>
+        <li><strong>Planted Even</strong> (<code>add_c=0x5A7C, hr=5, m1=3, m=7, t=4, K2=0x3C9E, S0_0=0xA1B2</code>): 정확히 <strong><code>8</code>-원소 궤도</strong> 복원, <code>planted_true_in_orbit = True</code>, 보유 홀드아웃 오차 <code>0</code>.</li>
+        <li><strong>Planted Odd</strong> (<code>add_c=0x5A7D</code> + 동일 파라미터): 패리티 붕괴 보조정리 그대로 <strong><code>4</code>-원소 MSB-only 궤도</strong>로 축소 복원, <code>planted_true_in_orbit = True</code>, 배제된 bit-0 파트너는 <code>31,301+</code>바이트 오차로 기각.</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Unpruned Negative Controls</h3>
+      <table>
+        <thead><tr><th>음성 대조군</th><th>Stage I</th><th>Stage II</th><th>Stage III</th><th>판정</th></tr></thead>
+        <tbody><tr><td><code>neg_urandom</code></td><td><code>[]</code></td><td><code>None</code></td><td><code>0</code></td><td><code>FAIL_STAGE1</code></td></tr>
+<tr><td><code>neg_shuffled</code></td><td><code>[]</code></td><td><code>None</code></td><td><code>0</code></td><td><code>FAIL_STAGE1</code></td></tr>
+<tr><td><code>neg_noacc</code></td><td><code>[5]</code></td><td><code>1</code></td><td><code>8</code></td><td><code>FAIL_STAGE3_ACC_TRUE</code></td></tr>
+<tr><td><code>neg_crc32c</code></td><td><code>[]</code></td><td><code>None</code></td><td><code>0</code></td><td><code>FAIL_STAGE1</code></td></tr></tbody>
+      </table>
+    </div>
+  </div>
+  <div class="callout ok">
+    <strong>Strictly Disjoint Blind Validation (<code>Cycle 324 P6</code> + <code>6x</code> Universal Gate)</strong>: 전수 코퍼스(<code>enum12/enum3</code>) 및 <code>Cycle 323</code>과 중복이 <strong>0바이트</strong>인 길이 4 이상 CSPRNG 홀드아웃(<code>P6_safe</code> 80행 + <code>P6_raw</code> 40행 = <code>25,600</code> B)에서 오차 <strong><code>0 / 25,600</code> B</strong>, 접두어 쌍 <code>16/16</code> 일치, 부호 <code>int8_t</code>는 <code>40 / 40</code>행(<code>5,101</code> B) 실패, 라이브 오라클 재생 <code>8/8</code>(R1 독립 <code>8/8</code> 추가). 또한 핀 고정된 <code>tests/universal_decryption_gate.py</code>를 총 <strong>6회(600개 CSPRNG 비밀번호, 1,800개 압축·저장 파일)</strong> 전수 통과(<code>RESULT: ACHIEVED</code>)했다.
+  </div>
+</section>
+
+<section id="s8" class="card">
+  <h2>8. 사람 또는 AI를 위한 독립 재유도 실행 청사진 (Executable Blueprint)</h2>
+  <p>다른 AI 에이전트나 분석가가 블랙박스 오라클(또는 본 패키지의 <code>03-reproducible-evidence/work/</code> 데이터)만을 손에 쥐고 Stage 0부터 최종 C 코드까지 <strong>동일하게 재유도하기 위한 절차 규격</strong>이다.</p>
+  <pre><code>DERIVATION_BLUEPRINT RAR15_KEYSTREAM_CLEANROOM:
+  INPUT  : Black-box oracle O(pw_bytes, n) -&gt; bytes[n] (or equivalent pre-collected corpora)
+  PRIORS : APPROVED-PRIOR RECALL-208 (small 16-bit word-state class)
+           APPROVED-PRIOR RECALL-209 (standard IEEE 802.3 T_ref, poly = 0xEDB88320, after observing 0x104C11DB7 in Stage 0)
+
+  STEP 0 [Oracle Probing &amp; Linear Invariant Extraction]:
+    - Collect same-prefix (len 77..85), single-byte raw (0x01..0xFF), and store-mode archives.
+    - Establish cutoff = 77, R = unfinalized_crc32(pw[:77]), bit-0 dead invariance (R &amp; 1 unused),
+      and algebraic weight collapse H(pw[:77]) = sum((T_ref[c] &gt;&gt; 16) + c) mod 2^16.
+    - Partition probe sets:
+        D_fibre (same (R, bx), varying H), e.g. c248 (6,144 rows -&gt; 5,888 same-(R,bx) pairs)
+        D_bx0   (fixed bx = XOR(pw) == 0x4c, varying R), e.g. c239 (2,095 rows, &gt;= 16 bytes)
+        D_bxall (all 128 ASCII bx values), e.g. c247 (4,096 rows = 128 x 32)
+        D_raw   (raw bytes including 0x80..0xFF), e.g. k109 (400 rows)
+
+  STEP 1 [Stage I: Isolate H rotation hr_rot on D_fibre]:
+    - Scan r in 0..15; require out_a[0] ^ out_b[0] == (ror16(H_a, r)&gt;&gt;8) ^ (ror16(H_b, r)&gt;&gt;8) for ALL pairs.
+    - Stop iff unique survivor hr_rot emerges (observed: hr_rot = 2, 0 err vs 5,857).
+    - Compute residual Y_0 = out[0] ^ (ror16(H, hr_rot) &gt;&gt; 8) on D_bx0.
+
+  STEP 2 [Stage II: GF(2) Left-Nullspace Bit-Peeling on D_bx0 Byte 0]:
+    - Fix N &gt;= 250 rows. Build 33-col GF(2) matrix X(u0) = [1 | bits(R_HI) | bits(T_LO[u0])], compute left nullspace K.
+    - Scan 65,536 pairs (add_lo9 even in 0..511, s0_lo8 in 0..255) checking (K @ rhs_bit8(add_lo9, s0_lo8)) % 2 == 0.
+    - Peel k = 9..15 upward bit-by-bit using K @ rhs_bit(k) == 0 to pin add_c mod 2^15 and narrow s0(bx0) mod 2^15.
+    - Verify Z0 residuals and scan 16x16 (m1_rot, t_rot) over GF(2) span X(u0) to uniquely fix (m1_rot, t_rot, const_hi).
+
+  STEP 3 [Stage III: Byte 1 Peeling &amp; Z_2^4 Orbit Determination on D_bx0]:
+    - Substitute W1_hi = out[0]; solve u1 = ((W1 + add_c) &gt;&gt; 1) &amp; 0xFF over surviving s0_lo8 band x even k2_lo8 (0..254).
+    - Use 49-col GF(2) span [1 | R_HI | T_LO[u0] | T_LO[u1]] on Y_1[0..1] to pin (s0_lo8, k2_lo8 &amp; 0xFE).
+    - Scan 2^3 (add_b15, s0_b15, k2_b0) x 2 (acc_k2) x 16^2 (m_rot, t_rot) = 4,096 tuples on 16+ stream bytes.
+    - Output: unique (m_rot, t_rot, acc_k2=True) and exact equivalence orbit O (size 8 if add_c even, else 4).
+
+  STEP 4 [Stage IV: Full Cross-bx Table S_0(c) &amp; Signedness Resolution]:
+    - Pick any gauge representative in O (e.g., canonical (add_c=0x1234, s0_0x4c=0xF208, K2_0=0xFFFF)).
+    - For each bx in 0..127 of D_bxall, scan s0 in 0..65535 on byte 0..15 -&gt; expect 128/128 unique survivors.
+    - Check GF(2) linearity of S_0(bx) and match against 0xFFFF ^ T_LO[bx] ^ bx.
+    - Test D_raw (c &gt;= 0x80) across {uint8, int8} x {bit7 T_LO vs masked} -&gt; expect unique 0-error unsigned match.
+
+  STEP 5 [Dual Controls &amp; Independent Blind Verification Gate]:
+    - Run SAME solver pipeline on synthetic Planted-Even, Planted-Odd (verifying Z_2^2 parity collapse), and 4 negatives.
+    - Collect strictly fresh CSPRNG blind holdouts disjoint from all training/enum corpora; require 0 byte errors.
+    - Implement standalone C99 function + unit tests; verify 0 external symbols (nm -u) and full decryption gate.</code></pre>
+</section>
+
+<section id="s9" class="card">
+  <h2>9. 오프라인 양방향 시뮬레이터 (100% Pure Vanilla JS, 네트워크 불필요)</h2>
+  <p>이 HTML 파일 자체에 내장된 순수 JavaScript로 동작한다(인터넷·외부 라이브러리 불필요). 아래 두 실험기로 임의의 비밀번호의 5-워드 상태 전이와 <code>Z<sub>2</sub><sup>4</sup></code> 게이지 불변성·패리티 붕괴 정리를 즉시 확인해 볼 수 있다.</p>
+
+  <div class="grid-2">
+    <div class="lab-box">
+      <h3 style="margin-top:0;">9.1 Live 5-Word Keystream &amp; Step Tracer</h3>
+      <div class="lab-controls">
+        <label>Mode:
+          <select id="simMode">
+            <option value="ascii">ASCII String</option>
+            <option value="hex">Raw Hex Bytes</option>
+          </select>
+        </label>
+        <label>Password: <input id="simPw" type="text" value="a" size="18"></label>
+        <label>Bytes: <input id="simLen" type="number" value="16" min="1" max="64" style="width:70px;"></label>
+        <button type="button" onclick="runTracer()">Run Trace</button>
+      </div>
+      <div id="simInit" class="kv-strip"></div>
+      <div style="margin:0.45rem 0; font-size:0.86rem;"><strong>Hex keystream:</strong> <code id="simHex"></code></div>
+      <div style="max-height:310px; overflow:auto;">
+        <table>
+          <thead><tr><th>i</th><th>W_in</th><th>W'</th><th>u</th><th>S</th><th>M</th><th>K2</th><th>Hr</th><th>W_out</th><th>out[i]</th></tr></thead>
+          <tbody id="simBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="lab-box">
+      <h3 style="margin-top:0;">9.2 Interactive Z<sub>2</sub><sup>4</sup> Gauge &amp; Parity-Collapse Lab</h3>
+      <p style="font-size:0.86rem; margin-top:0;">표준 모델(<code>R, 0x1234, S_0, 0xFFFF</code>)과 게이지 변환된 모델의 32바이트 출력을 실시간 비교한다. <code>add_c</code>가 짝수(<code>0x1234</code>)면 아래 16가지 <code>(r, a, b, d)</code> 조합 모두 <strong>0/32 바이트 차이</strong>지만, <code>add_c</code>를 홀수(<code>0x1235</code>)로 바꾸고 <code>d=1</code> 또는 <code>r=1</code>을 켜면 즉시 차이가 폭발한다.</p>
+      <div class="lab-controls">
+        <label>Test PW: <input id="gPw" type="text" value="CleanRoomTest!" size="16"></label>
+        <label>add_c parity:
+          <select id="gParity" onchange="runGauge()">
+            <option value="even">Even (0x1234 - Real RAR15)</option>
+            <option value="odd">Odd (0x1235 - Synthetic Planted Odd)</option>
+          </select>
+        </label>
+      </div>
+      <div class="lab-controls">
+        <label><input type="checkbox" id="gR" onchange="runGauge()"> r (flip R bit 0)</label>
+        <label><input type="checkbox" id="gA" onchange="runGauge()"> a (flip add_c bit 15)</label>
+        <label><input type="checkbox" id="gB" onchange="runGauge()"> b (flip S_0 bit 15)</label>
+        <label><input type="checkbox" id="gD" onchange="runGauge()"> d (flip K2_0 bit 0)</label>
+      </div>
+      <div id="gaugeStatus" class="callout ok" style="margin:0.5rem 0;"></div>
+      <div style="font-size:0.84rem;">
+        <div><strong>Base (r=0,a=0,b=0,d=0):</strong> <code id="gBaseHex"></code></div>
+        <div style="margin-top:0.35rem;"><strong>Gauged tuple:</strong> <code id="gParams"></code></div>
+        <div style="margin-top:0.35rem;"><strong>Gauged output:</strong> <code id="gTestHex"></code></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="s10" class="card">
+  <h2>10. 출처 경계, 역사적 투명성 부록 &amp; 비법률자문 고지</h2>
+  <ul>
+    <li><strong>핵심 증명 vs 비핵심 부록 구분</strong>: 위 Stage I~IV 재유도와 C99 구현의 정당성은 <strong>전적으로 저장소의 아카이브 데이터 + <code>Cycle 324</code> 결정적 솔버 + 블라인드 홀드아웃(<code>P6</code>) + 6회 유니버설 게이트</strong> 위에 서 있다. <code>2026-11-23</code> 당시 <code>Cycle 322 -&gt; 323</code> 사이의 약 71분 오프라인 탐색 명령(82회)을 마스킹 정제한 <a href="../provenance/APPENDIX-2026-11-23-c322-c323-session-log.md">역사적 투명성 부록</a>(<code>APPENDIX-2026-11-23-c322-c323-session-log.jsonl</code>)은 맥락 공개용 보조 자료일 뿐, 유도·증명 사슬의 전제가 아니다.</li>
+    <li><strong>전체 복호화·압축 해제 알고리즘 규격서</strong>: 컨테이너 파싱, 스트림 복호화 및 압축 해제(<code>0x30..0x35</code>) 상세 절차는 <a href="RAR15-DECRYPT-UNPACK-SPEC.ko.html">RAR15-DECRYPT-UNPACK-SPEC.ko.html</a>(또는 <a href="RAR15-DECRYPT-UNPACK-SPEC.ko.md">RAR15-DECRYPT-UNPACK-SPEC.ko.md</a>)에서 확인할 수 있다.</li>
+    <li><strong>테스트 픽스처 출처(<code>T.TXT</code>, <code>I.PNG</code>, <code>X.EXE</code>)</strong>: 게이트 검증에 사용된 세 테스트 파일(<code>tests/fixtures/gate/*</code>)은 모두 본 저장소 오너가 확인한(<code>2026-11-23</code> / <code>2026-11-24</code>) <strong>AI 자동 생성 합성 예제 파일</strong>이며, 제3자 저작물이나 상용 프로그램 바이너리가 포함되어 있지 않아 MIT 라이선스 공개 시 저작권 문제가 없다.</li>
+    <li><strong>MIT 라이선스 및 비법률자문 고지</strong>: C99 라이브러리(<code>tools/libcleanroom/</code> / <code>02-mit-library/</code>)는 서드파티 아카이버 코드·역어셈블리·하드코딩 키스트림·오라클 호출을 일절 포함하지 않은 원창작 MIT 코드(오너 제공 MIT 디코더 <code>u15_unpack.{h,c}</code> 포함)다. <code>RAR</code> 및 <code>WinRAR</code>는 각 소유자의 상표이며, 본 문서의 감사 설명은 기술·공학 출처 보고서이지 정식 법률 자문(formal legal advice)을 대체하지 않는다.</li>
+  </ul>
+</section>
+
+</main>
+<footer>
+  fultaarc-cleanroom-rar15-enc3 | Offline Self-Contained Derivation Guide | SPDX-License-Identifier: MIT
+</footer>
+
+<script>
+(function () {
+  const T_REF = new Uint32Array(256);
+  for (let i = 0; i < 256; i++) {
+    let c = i >>> 0;
+    for (let k = 0; k < 8; k++) {
+      c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) >>> 0 : (c >>> 1) >>> 0;
+    }
+    T_REF[i] = c >>> 0;
+  }
+
+  function rol16(x, r) {
+    r &= 15;
+    x &= 0xFFFF;
+    return r ? (((x << r) | (x >>> (16 - r))) & 0xFFFF) : x;
+  }
+  function ror16(x, r) {
+    r &= 15;
+    x &= 0xFFFF;
+    return r ? (((x >>> r) | (x << (16 - r))) & 0xFFFF) : x;
+  }
+  function hex(v, w) {
+    return "0x" + (v >>> 0).toString(16).padStart(w, "0");
+  }
+  function parseInput(mode, text) {
+    if (mode === "hex") {
+      const clean = text.replace(/[^0-9a-fA-F]/g, "");
+      if (clean.length % 2 !== 0) throw new Error("Hex string must have even number of digits");
+      const arr = [];
+      for (let i = 0; i < clean.length; i += 2) arr.push(parseInt(clean.slice(i, i + 2), 16));
+      return arr;
+    }
+    const bytes = new TextEncoder().encode(text);
+    return Array.from(bytes);
+  }
+
+  function runKeystreamParam(pwBytes, n, opts) {
+    const addBase = opts.addBase & 0xFFFF;
+    const rFlip = opts.r ? 1 : 0;
+    const aFlip = opts.a ? 0x8000 : 0;
+    const bFlip = opts.b ? 0x8000 : 0;
+    const dFlip = opts.d ? 1 : 0;
+    const e = pwBytes.slice(0, 77);
+    let R = 0xFFFFFFFF >>> 0;
+    let H = 0;
+    let S = 0xFFFF;
+    for (const c of e) {
+      R = ((R >>> 8) ^ T_REF[(R ^ c) & 0xFF]) >>> 0;
+      H = (H + (T_REF[c] >>> 16) + c) & 0xFFFF;
+      S ^= ((T_REF[c] & 0xFFFF) ^ c) & 0xFFFF;
+    }
+    const S_mod = (S ^ bFlip) & 0xFFFF;
+    const add_mod = (addBase ^ aFlip) & 0xFFFF;
+    const K2_init = (0xFFFF ^ ((opts.a ^ opts.b) ? 0x8000 : 0) ^ dFlip) & 0xFFFF;
+
+    let W = ((R & 0xFFFF) ^ rFlip) & 0xFFFF;
+    let M = rol16((R >>> 16) & 0xFFFF, 1);
+    let K2 = K2_init;
+    let Hr = H;
+    S = S_mod;
+    const out = [];
+    const steps = [];
+    for (let i = 0; i < n; i++) {
+      const W_in = W;
+      const W_add = (W + add_mod) & 0xFFFF;
+      const u = (W_add >>> 1) & 0xFF;
+      const t = T_REF[u];
+      S = (S + (t >>> 16)) & 0xFFFF;
+      M = (ror16(M, 2) ^ ror16(t & 0xFFFF, 1)) & 0xFFFF;
+      K2 ^= M;
+      Hr = ror16(Hr, 2);
+      W = (W_add ^ S ^ Hr ^ K2) & 0xFFFF;
+      const ob = (W >>> 8) & 0xFF;
+      out.push(ob);
+      steps.push({ i, W_in, W_add, u, S, M, K2, Hr, W, ob });
+    }
+    return {
+      init: { R, H, S0: S_mod, W0: (R ^ rFlip) & 0xFFFF, M0: rol16((R >>> 16) & 0xFFFF, 1), K2_0: K2_init, add_mod },
+      out,
+      steps
+    };
+  }
+
+  window.runTracer = function () {
+    const mode = document.getElementById("simMode").value;
+    const pwText = document.getElementById("simPw").value;
+    const n = Math.max(1, Math.min(64, parseInt(document.getElementById("simLen").value || "16", 10)));
+    let pwBytes;
+    try {
+      pwBytes = parseInput(mode, pwText);
+    } catch (err) {
+      document.getElementById("simHex").textContent = "Error: " + err.message;
+      return;
+    }
+    const res = runKeystreamParam(pwBytes, n, { addBase: 0x1234, r: 0, a: 0, b: 0, d: 0 });
+    document.getElementById("simInit").innerHTML = [
+      `<div class="kv-pill">len(e)=<code>${Math.min(pwBytes.length, 77)}</code></div>`,
+      `<div class="kv-pill">R=<code>${hex(res.init.R, 8)}</code></div>`,
+      `<div class="kv-pill">H=<code>${hex(res.init.H, 4)}</code></div>`,
+      `<div class="kv-pill">S0=<code>${hex(res.init.S0, 4)}</code></div>`,
+      `<div class="kv-pill">W0=<code>${hex(res.init.W0, 4)}</code></div>`,
+      `<div class="kv-pill">M0=<code>${hex(res.init.M0, 4)}</code></div>`,
+      `<div class="kv-pill">K2_0=<code>${hex(res.init.K2_0, 4)}</code></div>`
+    ].join("");
+    document.getElementById("simHex").textContent = res.out.map(b => b.toString(16).padStart(2, "0")).join("");
+    document.getElementById("simBody").innerHTML = res.steps.map(s =>
+      `<tr><td>${s.i}</td><td><code>${hex(s.W_in,4)}</code></td><td><code>${hex(s.W_add,4)}</code></td><td><code>${hex(s.u,2)}</code></td><td><code>${hex(s.S,4)}</code></td><td><code>${hex(s.M,4)}</code></td><td><code>${hex(s.K2,4)}</code></td><td><code>${hex(s.Hr,4)}</code></td><td><code>${hex(s.W,4)}</code></td><td><strong><code>${hex(s.ob,2)}</code></strong></td></tr>`
+    ).join("");
+  };
+
+  window.runGauge = function () {
+    const pwBytes = Array.from(new TextEncoder().encode(document.getElementById("gPw").value));
+    const addBase = document.getElementById("gParity").value === "odd" ? 0x1235 : 0x1234;
+    const r = document.getElementById("gR").checked ? 1 : 0;
+    const a = document.getElementById("gA").checked ? 1 : 0;
+    const b = document.getElementById("gB").checked ? 1 : 0;
+    const d = document.getElementById("gD").checked ? 1 : 0;
+    const base = runKeystreamParam(pwBytes, 32, { addBase, r: 0, a: 0, b: 0, d: 0 });
+    const test = runKeystreamParam(pwBytes, 32, { addBase, r, a, b, d });
+    let diffs = 0;
+    for (let i = 0; i < 32; i++) if (base.out[i] !== test.out[i]) diffs++;
+    const statusEl = document.getElementById("gaugeStatus");
+    if (diffs === 0) {
+      statusEl.className = "callout ok";
+      statusEl.innerHTML = `<strong>0 / 32 byte differences</strong> &mdash; Exact gauge equivalence holds for (r=${r}, a=${a}, b=${b}, d=${d}) under add_c=${hex(addBase,4)}!`;
+    } else {
+      statusEl.className = "callout warn";
+      statusEl.innerHTML = `<strong>${diffs} / 32 byte differences</strong> &mdash; Parity collapse triggered! Odd add_c=${hex(addBase,4)} couples bit-0 flips (r=${r}, d=${d}) into (W + add_c) &gt;&gt; 1.`;
+    }
+    document.getElementById("gBaseHex").textContent = base.out.map(x => x.toString(16).padStart(2, "0")).join("");
+    document.getElementById("gParams").textContent = `add_c=${hex(test.init.add_mod,4)}, K2_0=${hex(test.init.K2_0,4)}, R_lsb=${test.init.W0 & 1}, S0_msb=${(test.init.S0 & 0x8000) ? 1 : 0}`;
+    document.getElementById("gTestHex").textContent = test.out.map(x => x.toString(16).padStart(2, "0")).join("");
+  };
+
+  window.addEventListener("DOMContentLoaded", function () {
+    window.runTracer();
+    window.runGauge();
+  });
+})();
+</script>
+</body>
+</html>

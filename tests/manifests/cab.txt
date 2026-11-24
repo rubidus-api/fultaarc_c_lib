@@ -1,0 +1,95 @@
+# cab.txt - Microsoft Cabinet (.cab) fixtures made by tests/tools/cabmake.py and VALIDATED BY `7z x`/`7z t` (an
+# independent CAB reader) before commit; see docs/research/formats/cab.md and T022. The listing is exact (every
+# file our reader produces is here) and file content (size+crc32) is 7z-validated end to end - CAB is, with tar/ar/
+# cpio/ISO, a fully 7z-validated container (no reader-defined divergence). basic.cab exercises an MSZIP folder (a
+# file spanning several CFDATA blocks, so the cross-block window is used; a backslash subdir path; a UTF-8 name)
+# AND a Store folder in the same cabinet (so uoffFolderStart slicing and the per-folder cache are pinned).
+# reserve.cab sets cfhdrRESERVE_PRESENT (per-header/folder/datablock reserve) so the reserve-skip + the
+# reserve-inclusive CFDATA checksum are exercised. The lzx*.cab fixtures exercise the LZX decoder (src/codec/lzx.c):
+# lzx.cab a verbatim block with several files (uoffFolderStart slicing, a subdir path, a UTF-8 name);
+# lzxaligned.cab an aligned-offset block (the aligned tree + split footer); lzxbig.cab a multi-chunk folder (the LZX
+# block/window/R state spanning CFDATA boundaries, window 2^21); lzxe8.cab E8 x86 call-translation (7z reverses it
+# too); lzx19.cab tree lengths with long equal runs (pretree code 19, the same-delta run). All are LZX-encoded by
+# tests/tools/cabmake.py and validated by `7z x` (which reads CAB-LZX). quantum10/12/21.cab are QUANTUM folders (window
+# 2^10, 2^12, 2^21) made by Microsoft's own Diamond 1.00.0530 tool from neutral plaintext (fixtures/cab/quantum-plain/:
+# generated text, 40 000 random bytes spanning CFDATAs, a zero run) and validated by Windows' extrac32 (SHA-256 of every
+# extracted file; the sibling clean room's record Q0051); quantum12.cab also carries a Store folder. 7z is not used on
+# Quantum (its decoder is copyleft-derived; the clean room never ran it on type-2 data). Cross-cabinet files -> test_cab.c
+# (UNSUPPORTED without a volume resolver) unless the set is opened by file: qset1/2/3.cab (Quantum, Diamond), mset1/2/3.cab
+# (MSZIP, makecab) and lset1/2/3.cab (LZX, makecab) are 40 KiB cabinet sets from the same four neutral plaintexts
+# (fixtures/cab/set-plain/): beta.bin is split across cabinets 1-2 (a CFDATA split at the boundary), gamma.txt/delta.bin
+# sit in a folder continued from cabinet 2 into 3; validated by Windows' extrac32 per cabinet. Opened from ANY cabinet
+# of a set the whole set lists and extracts the same four files (the PREV and NEXT chains are followed by name in the
+# same directory), so each set has rows for all three of its cabinets.
+# lzx21_makecab.cab (2026-11-12, D-044) is Windows makecab's own LZX at its largest window (/D CompressionType=LZX
+# /D CompressionMemory=21, Windows 11): neutral generated plaintext (text, x86-like E8 calls, random, a 600 KB block
+# repeated 1.1 MB later), 98 CFDATAs, E8 translation on; validated by Windows' extrac32 (SHA-256) and `7z t`. Its
+# chunks end with a code shorter than the decoder's 10-bit look-ahead, which the reader once took for a cut-short
+# chunk (every file failed).
+# archive|entry|size|crc32
+basic.cab|hello.txt|16|93a6b110
+basic.cab|docs/readme.txt|33|d2ccd30e
+basic.cab|café.txt|20|6fe491a5
+basic.cab|big.bin|70000|12c4f934
+basic.cab|stored.txt|30|38bc88bd
+basic.cab|note.txt|32|0f5784cd
+reserve.cab|r1.txt|23|28038504
+reserve.cab|r2.bin|5000|b641f5c8
+lzx.cab|lzxfile.txt|900|99cfd7c4
+lzx.cab|docs/readme.txt|320|030cc750
+lzx.cab|data.bin|1500|0f5f7066
+lzx.cab|café.txt|215|825af905
+lzxaligned.cab|aligned.bin|980|ac07fff7
+lzxbig.cab|big.txt|75000|1efff979
+lzxe8.cab|prog.bin|3924|f5725a0b
+lzx19.cab|runs.txt|1200|065966cc
+quantum10.cab|readme.txt|20262|79ef50c8
+quantum10.cab|random.bin|40000|f729bb8a
+quantum10.cab|zeros.bin|12288|efa8aa7f
+quantum12.cab|readme.txt|20262|79ef50c8
+quantum12.cab|random.bin|40000|f729bb8a
+quantum12.cab|zeros.bin|12288|efa8aa7f
+quantum12.cab|stored.txt|1420|1f266e41
+quantum21.cab|readme.txt|20262|79ef50c8
+quantum21.cab|random.bin|40000|f729bb8a
+quantum21.cab|zeros.bin|12288|efa8aa7f
+qset1.cab|alpha.txt|30403|ebe22a1d
+qset1.cab|beta.bin|70000|2e217cee
+qset1.cab|gamma.txt|25327|5d6d0933
+qset1.cab|delta.bin|5000|6ea2bfc0
+mset1.cab|alpha.txt|30403|ebe22a1d
+mset1.cab|beta.bin|70000|2e217cee
+mset1.cab|gamma.txt|25327|5d6d0933
+mset1.cab|delta.bin|5000|6ea2bfc0
+lset1.cab|alpha.txt|30403|ebe22a1d
+lset1.cab|beta.bin|70000|2e217cee
+lset1.cab|gamma.txt|25327|5d6d0933
+lset1.cab|delta.bin|5000|6ea2bfc0
+qset2.cab|alpha.txt|30403|ebe22a1d
+qset2.cab|beta.bin|70000|2e217cee
+qset2.cab|gamma.txt|25327|5d6d0933
+qset2.cab|delta.bin|5000|6ea2bfc0
+qset3.cab|alpha.txt|30403|ebe22a1d
+qset3.cab|beta.bin|70000|2e217cee
+qset3.cab|gamma.txt|25327|5d6d0933
+qset3.cab|delta.bin|5000|6ea2bfc0
+mset2.cab|alpha.txt|30403|ebe22a1d
+mset2.cab|beta.bin|70000|2e217cee
+mset2.cab|gamma.txt|25327|5d6d0933
+mset2.cab|delta.bin|5000|6ea2bfc0
+mset3.cab|alpha.txt|30403|ebe22a1d
+mset3.cab|beta.bin|70000|2e217cee
+mset3.cab|gamma.txt|25327|5d6d0933
+mset3.cab|delta.bin|5000|6ea2bfc0
+lset2.cab|alpha.txt|30403|ebe22a1d
+lset2.cab|beta.bin|70000|2e217cee
+lset2.cab|gamma.txt|25327|5d6d0933
+lset2.cab|delta.bin|5000|6ea2bfc0
+lset3.cab|alpha.txt|30403|ebe22a1d
+lset3.cab|beta.bin|70000|2e217cee
+lset3.cab|gamma.txt|25327|5d6d0933
+lset3.cab|delta.bin|5000|6ea2bfc0
+lzx21_makecab.cab|text.txt|817144|bae4bb28
+lzx21_makecab.cab|code.bin|471432|4284e8bb
+lzx21_makecab.cab|random.bin|200000|31dbbe22
+lzx21_makecab.cab|far.bin|1700000|454a8fdf

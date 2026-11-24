@@ -1,0 +1,152 @@
+# archive|entry|size|crc32 - RAR fixtures (Rubraview's, imported): libarchive 3.7.7's test archives as bsdtar extracted them, RAR 2.50-7.12 archives of generated inputs as UnRAR 7.3.1 (run as a black-box oracle, never read) extracted them. Passwords: pass, 비밀 번호 (*_hangul), password (libarchive's)
+rar.rar|test.txt|20|bec8a242
+rar.rar|testdir/test.txt|20|bec8a242
+rar2_m1.rar|code_x86.bin|200000|7d53e2ea
+rar2_m1.rar|story.txt|300170|8186060f
+rar2_m5.rar|code_x86.bin|200000|7d53e2ea
+rar2_m5.rar|story.txt|300170|8186060f
+rar2_md64.rar|code_x86.bin|200000|7d53e2ea
+rar2_md64.rar|story.txt|300170|8186060f
+rar2_mm_auto.rar|audio.wav|264644|dbd47fdb
+rar2_mm_auto.rar|image.bmp|180054|07071c41
+rar2_mm_auto.rar|mono8.raw|60000|4a1c4bd7
+rar2_mm_forced.rar|audio.wav|264644|dbd47fdb
+rar2_mm_forced.rar|image.bmp|180054|07071c41
+rar2_mm_forced.rar|mono8.raw|60000|4a1c4bd7
+rar2_mm_solid.rar|audio.wav|264644|dbd47fdb
+rar2_mm_solid.rar|mono8.raw|60000|4a1c4bd7
+rar2_solid_md4096.rar|audio.wav|264644|dbd47fdb
+rar2_solid_md4096.rar|code_x86.bin|200000|7d53e2ea
+rar2_solid_md4096.rar|image.bmp|180054|07071c41
+rar2_solid_md4096.rar|story.txt|300170|8186060f
+rar3_auto_filters.rar|audio.wav|264644|dbd47fdb
+rar3_auto_filters.rar|code_x86.bin|200000|7d53e2ea
+rar3_auto_filters.rar|image.bmp|180054|07071c41
+rar3_auto_filters.rar|story.txt|300170|8186060f
+rar3_auto_filters.rar|table.bin|200000|48dda7da
+rar3_filter_audio_mono8.rar|mono8.raw|60000|4a1c4bd7
+rar3_filter_audio_stereo16.rar|audio.wav|264644|dbd47fdb
+rar3_filter_delta4.rar|table.bin|200000|48dda7da
+rar3_filter_itanium.rar|code_ia64.bin|131072|947f92df
+rar3_filter_rgb.rar|image.bmp|180054|07071c41
+rar3_filter_x86.rar|code_x86.bin|200000|7d53e2ea
+rar3_m1.rar|code_x86.bin|200000|7d53e2ea
+rar3_m1.rar|story.txt|300170|8186060f
+rar3_md4096.rar|audio.wav|264644|dbd47fdb
+rar3_md4096.rar|story.txt|300170|8186060f
+rar3_ppmd.rar|story.txt|300170|8186060f
+rar3_ppmd_filter_audio.rar|audio.wav|264644|dbd47fdb
+rar3_ppmd_filter_x86.rar|code_x86.bin|200000|7d53e2ea
+rar3_ppmd_lz_solid.rar|code_x86.bin|200000|7d53e2ea
+rar3_ppmd_lz_solid.rar|image.bmp|180054|07071c41
+rar3_ppmd_lz_solid.rar|mono8.raw|60000|4a1c4bd7
+rar3_ppmd_lz_solid.rar|story.txt|300170|8186060f
+rar3_ppmd_order63.rar|story.txt|300170|8186060f
+rar3_sfx_stub.sfx|code_x86.bin|200000|7d53e2ea
+rar3_sfx_stub.sfx|story.txt|300170|8186060f
+rar4_64bit_size.rar|big.bin|4499963925|17be52b5
+rar4_enc_data.rar|noise.bin|12000|1fa12d9d
+rar4_enc_data.rar|story.txt|109932|74ad0f22
+rar4_enc_data.rar|sub/한글 이름.txt|8200|3e95bda4
+rar4_enc_hangul.rar|story.txt|109932|74ad0f22
+rar4_enc_headers.rar|noise.bin|12000|1fa12d9d
+rar4_enc_headers.rar|story.txt|109932|74ad0f22
+rar4_enc_headers.rar|sub/한글 이름.txt|8200|3e95bda4
+rar4_enc_solid.rar|noise.bin|12000|1fa12d9d
+rar4_enc_solid.rar|story.txt|109932|74ad0f22
+rar4_enc_solid.rar|sub/한글 이름.txt|8200|3e95bda4
+rar4_enc_stored.rar|noise.bin|12000|1fa12d9d
+rar4_enc_stored.rar|sub/한글 이름.txt|8200|3e95bda4
+rar4_oldvol.rar|noise.bin|12000|1fa12d9d
+rar4_oldvol.rar|story.txt|109932|74ad0f22
+rar4_oldvol.rar|sub/한글 이름.txt|8200|3e95bda4
+rar4_vol.part01.rar|noise.bin|12000|1fa12d9d
+rar4_vol.part01.rar|story.txt|109932|74ad0f22
+rar4_vol.part01.rar|sub/한글 이름.txt|8200|3e95bda4
+rar4_vol_enc.part01.rar|noise.bin|12000|1fa12d9d
+rar4_vol_enc.part01.rar|story.txt|109932|74ad0f22
+rar4_vol_enc.part01.rar|sub/한글 이름.txt|8200|3e95bda4
+rar5_arm.rar|elf-Linux-ARMv7-ls|90808|886f91eb
+rar5_blake2.rar|cebula.txt|814|7e5ec49e
+rar5_compressed.rar|test.bin|1200|7cca70cd
+rar5_enc_data.rar|noise.bin|12000|1fa12d9d
+rar5_enc_data.rar|story.txt|109932|74ad0f22
+rar5_enc_data.rar|sub/한글 이름.txt|8200|3e95bda4
+rar5_enc_hangul.rar|story.txt|109932|74ad0f22
+rar5_enc_headers.rar|noise.bin|12000|1fa12d9d
+rar5_enc_headers.rar|story.txt|109932|74ad0f22
+rar5_enc_headers.rar|sub/한글 이름.txt|8200|3e95bda4
+rar5_enc_solid.rar|noise.bin|12000|1fa12d9d
+rar5_enc_solid.rar|story.txt|109932|74ad0f22
+rar5_enc_solid.rar|sub/한글 이름.txt|8200|3e95bda4
+rar5_enc_stored.rar|noise.bin|12000|1fa12d9d
+rar5_enc_stored.rar|sub/한글 이름.txt|8200|3e95bda4
+rar5_fileattr.rar|hidden.txt|11|853d846f
+rar5_fileattr.rar|readonly.txt|11|9b8edd8b
+rar5_fileattr.rar|ro_hidden.txt|11|1d109f2e
+rar5_fileattr.rar|system.txt|11|28d28c2d
+rar5_multiarchive_solid.part01.rar|cebula.txt|814|7e5ec49e
+rar5_multiarchive_solid.part01.rar|elf-Linux-ARMv7-ls|90808|886f91eb
+rar5_multiarchive_solid.part01.rar|test.bin|1200|7cca70cd
+rar5_multiarchive_solid.part01.rar|test1.bin|4096|7e13b2c6
+rar5_multiarchive_solid.part01.rar|test2.bin|4096|f166afcb
+rar5_multiarchive_solid.part01.rar|test3.bin|4096|9fb123d9
+rar5_multiarchive_solid.part01.rar|test4.bin|4096|10c43ed4
+rar5_multiarchive_solid.part01.rar|test5.bin|4096|b9d155f2
+rar5_multiarchive_solid.part01.rar|test6.bin|4096|36a448ff
+rar5_multiple_files.rar|test1.bin|4096|7e13b2c6
+rar5_multiple_files.rar|test2.bin|4096|f166afcb
+rar5_multiple_files.rar|test3.bin|4096|9fb123d9
+rar5_multiple_files.rar|test4.bin|4096|10c43ed4
+rar5_multiple_files_solid.rar|test1.bin|4096|7e13b2c6
+rar5_multiple_files_solid.rar|test2.bin|4096|f166afcb
+rar5_multiple_files_solid.rar|test3.bin|4096|9fb123d9
+rar5_multiple_files_solid.rar|test4.bin|4096|10c43ed4
+rar5_sfx_stub.sfx|code_x86.bin|200000|7d53e2ea
+rar5_sfx_stub.sfx|story.txt|300170|8186060f
+rar5_solid.rar|test.bin|1200|7cca70cd
+rar5_solid.rar|test1.bin|4096|7e13b2c6
+rar5_solid.rar|test2.bin|4096|f166afcb
+rar5_solid.rar|test3.bin|4096|9fb123d9
+rar5_solid.rar|test4.bin|4096|10c43ed4
+rar5_solid.rar|test5.bin|4096|b9d155f2
+rar5_solid.rar|test6.bin|4096|36a448ff
+rar5_stored.rar|helloworld.txt|29|95a043b4
+rar5_vol.part01.rar|noise.bin|12000|1fa12d9d
+rar5_vol.part01.rar|story.txt|109932|74ad0f22
+rar5_vol.part01.rar|sub/한글 이름.txt|8200|3e95bda4
+rar5_vol_enc.part01.rar|noise.bin|12000|1fa12d9d
+rar5_vol_enc.part01.rar|story.txt|109932|74ad0f22
+rar5_vol_enc.part01.rar|sub/한글 이름.txt|8200|3e95bda4
+rar5_win32.rar|test.bin|1200|7cca70cd
+rar5_win32.rar|test1.bin|4096|7e13b2c6
+rar5_win32.rar|test2.bin|4096|f166afcb
+rar5_win32.rar|test3.bin|4096|9fb123d9
+rar5_win32.rar|test4.bin|4096|10c43ed4
+rar5_win32.rar|test5.bin|4096|b9d155f2
+rar5_win32.rar|test6.bin|4096|36a448ff
+rar7_v70_md4352m.rar|big.bin|4499963925|17be52b5
+rar_compress_best.rar|LibarchiveAddingTest.html|20111|5e05a663
+rar_compress_best.rar|testdir/LibarchiveAddingTest.html|20111|5e05a663
+rar_compress_best.rar|testdir/test.txt|20|bec8a242
+rar_compress_normal.rar|LibarchiveAddingTest.html|20111|5e05a663
+rar_compress_normal.rar|testdir/LibarchiveAddingTest.html|20111|5e05a663
+rar_compress_normal.rar|testdir/test.txt|20|bec8a242
+rar_filter.rar|bsdcat.exe|204288|4db10349
+rar_multi_lzss_blocks.rar|multi_lzss_blocks_test.txt|20131111|6ba21570
+rar_noeof.rar|test.txt|20|bec8a242
+rar_ppmd_lzss_conversion.rar|ppmd_lzss_conversion_test.txt|241647978|f72b4477
+rar_subblock.rar|test.txt|20|bec8a242
+rar_unicode.rar|abcdefghijklmnopqrsテスト.txt|16|15b6d005
+rar_windows.rar|test.txt|16|97d612f1
+rar_windows.rar|testdir/test.txt|16|97d612f1
+rar_windows.rar|testshortcut.lnk|441|5b5cd737
+# rar200_dos_sfx.exe / rar250_dos_sfx.exe: RARLAB's own DOS installers of RAR 2.00 and 2.50 (self-extractors whose
+# archive ends in an authenticity block; the self-extractor module replaced by filler of the same length). Rows: the three files the installer itself wrote when run under DOSBox
+# (size and CRC-32 of its output, not FultaArc's). The listing reads to the end, so the authenticity block is crossed.
+rar200_dos_sfx.exe|LICENSE.TXT|3085|e3ee909b
+rar200_dos_sfx.exe|RAR.EXE|102989|cbbf8242
+rar200_dos_sfx.exe|UNRAR.EXE|31906|e07c1dff
+rar250_dos_sfx.exe|LICENSE.TXT|4997|c33d0019
+rar250_dos_sfx.exe|RAR.EXE|105208|94ea9aa9
+rar250_dos_sfx.exe|UNRAR.EXE|32086|5e651154

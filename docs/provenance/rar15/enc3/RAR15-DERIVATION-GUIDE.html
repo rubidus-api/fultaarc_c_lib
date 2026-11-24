@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RAR 1.5 Keystream Constructive Derivation Guide (Clean-Room Spec &amp; Interactive Lab)</title>
+<style>
+  :root {
+    --bg: #f7f9fc;
+    --card: #ffffff;
+    --ink: #17212b;
+    --muted: #526273;
+    --border: #d8e1eb;
+    --accent: #145388;
+    --accent-soft: #e8f1fa;
+    --code-bg: #161b22;
+    --code-fg: #e6edf3;
+    --ok: #137333;
+    --ok-bg: #e6f4ea;
+    --warn: #8a5300;
+    --warn-bg: #fef7e0;
+    --prior: #5b21b6;
+    --prior-bg: #f3e8ff;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.65;
+  }
+  header {
+    background: linear-gradient(135deg, #0f2c47 0%, #194d7a 100%);
+    color: #ffffff;
+    padding: 2rem 1.5rem 1.75rem;
+    border-bottom: 4px solid #388bfd;
+  }
+  header .wrap { max-width: 1180px; margin: 0 auto; }
+  header h1 { margin: 0 0 0.5rem; font-size: 1.85rem; line-height: 1.25; }
+  header p { margin: 0.25rem 0 0; color: #dbe9f6; max-width: 920px; }
+  nav.toc {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: #ffffff;
+    border-bottom: 1px solid var(--border);
+    padding: 0.55rem 1rem;
+    overflow-x: auto;
+    white-space: nowrap;
+    box-shadow: 0 2px 6px rgba(16, 24, 40, 0.04);
+  }
+  nav.toc .wrap { max-width: 1180px; margin: 0 auto; display: flex; gap: 0.55rem; flex-wrap: wrap; }
+  nav.toc a {
+    text-decoration: none;
+    color: var(--accent);
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 0.22rem 0.55rem;
+    border-radius: 6px;
+    border: 1px solid transparent;
+  }
+  nav.toc a:hover { background: var(--accent-soft); border-color: #b7d3ef; }
+  main { max-width: 1180px; margin: 1.5rem auto 3rem; padding: 0 1.2rem; }
+  section.card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.4rem 1.6rem;
+    margin-bottom: 1.25rem;
+    box-shadow: 0 1px 3px rgba(16, 24, 40, 0.04);
+  }
+  h2 {
+    margin-top: 0;
+    padding-bottom: 0.45rem;
+    border-bottom: 2px solid var(--accent-soft);
+    color: #0f2c47;
+    font-size: 1.32rem;
+  }
+  h3 { color: #194d7a; font-size: 1.05rem; margin: 1.15rem 0 0.45rem; }
+  .badge {
+    display: inline-block;
+    font-size: 0.74rem;
+    font-weight: 700;
+    padding: 0.14rem 0.48rem;
+    border-radius: 999px;
+    vertical-align: middle;
+    margin-right: 0.35rem;
+    letter-spacing: 0.02em;
+  }
+  .b-prior { background: var(--prior-bg); color: var(--prior); border: 1px solid #d8b4fe; }
+  .b-data { background: var(--accent-soft); color: var(--accent); border: 1px solid #bfdbfe; }
+  .b-ok { background: var(--ok-bg); color: var(--ok); border: 1px solid #a7f3d0; }
+  .b-warn { background: var(--warn-bg); color: var(--warn); border: 1px solid #fcd34d; }
+  .callout {
+    border-left: 4px solid var(--accent);
+    background: #f2f7fc;
+    padding: 0.8rem 1rem;
+    border-radius: 0 6px 6px 0;
+    margin: 0.9rem 0;
+  }
+  .callout.warn { border-left-color: #d97706; background: #fffbeb; }
+  .callout.ok { border-left-color: var(--ok); background: #f0fdf4; }
+  code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    font-size: 0.9em;
+    color: #0f172a;
+    background: #e9eff6;
+    padding: 0.12rem 0.34rem;
+    border-radius: 4px;
+  }
+  header code {
+    background: rgba(255, 255, 255, 0.18);
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.30);
+  }
+  pre {
+    background: var(--code-bg);
+    color: var(--code-fg);
+    padding: 0.95rem 1.1rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    font-size: 0.84rem;
+    line-height: 1.48;
+    border: 1px solid #30363d;
+  }
+  pre code { background: transparent; padding: 0; color: inherit; font-size: inherit; border: none; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0.85rem 0;
+    font-size: 0.87rem;
+  }
+  th, td {
+    border: 1px solid var(--border);
+    padding: 0.42rem 0.55rem;
+    text-align: left;
+    vertical-align: top;
+  }
+  th { background: #eef4fa; color: #0f2c47; font-weight: 700; }
+  tr:nth-child(even) td { background: #fafcff; }
+  .math {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    color: #0f172a;
+    background: #f4f7fb;
+    border: 1px solid #dde6f0;
+    border-radius: 6px;
+    padding: 0.65rem 0.9rem;
+    margin: 0.6rem 0;
+    overflow-x: auto;
+    font-size: 0.89rem;
+  }
+  .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 1rem; }
+  .svg-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 8px; background: #fcfdff; padding: 0.75rem; margin: 0.8rem 0; }
+  .lab-box {
+    border: 1px solid #c5d6e8;
+    border-radius: 8px;
+    padding: 1rem 1.1rem;
+    background: #f9fbfe;
+    margin-top: 0.75rem;
+  }
+  .lab-controls { display: flex; flex-wrap: wrap; gap: 0.65rem; align-items: center; margin-bottom: 0.75rem; }
+  input[type="text"], input[type="number"], select {
+    padding: 0.35rem 0.55rem;
+    border: 1px solid #b6c6d8;
+    border-radius: 6px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.88rem;
+  }
+  button {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 0.42rem 0.85rem;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 0.88rem;
+  }
+  button:hover { background: #0f3f69; }
+  .kv-strip { display: flex; flex-wrap: wrap; gap: 0.55rem; margin: 0.5rem 0; }
+  .kv-pill { background: #fff; border: 1px solid var(--border); border-radius: 6px; padding: 0.28rem 0.55rem; font-size: 0.83rem; }
+  footer { text-align: center; color: var(--muted); font-size: 0.85rem; padding: 1.5rem 1rem; }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <h1>RAR 1.5 Keystream Constructive Derivation Guide</h1>
+    <p>A 100% offline, self-contained guide enabling any human engineer or AI agent to re-derive and verify the exact RAR 1.5 keystream generator (<code>G(pw, n)</code>) and its <code>Z<sub>2</sub><sup>4</sup></code> gauge equivalence end-to-end using <strong>only black-box oracle I/O queries</strong> and the algebraic stages below.</p>
+    <p style="margin-top:0.5rem;">
+      <span class="badge b-prior">APPROVED-PRIOR: RECALL-208 / RECALL-209</span>
+      <span class="badge b-data">DATA-DERIVED: Cycles 001..322 + Cycle 324 Constructive Solver</span>
+      <span class="badge b-ok">VERIFIED: 0 / 25,600 B Blind Holdout &amp; 6x Gate (600 / 600 PW)</span>
+    </p>
+  </div>
+</header>
+
+<nav class="toc">
+  <div class="wrap">
+    <a href="#s0">0. Black-Box Contract</a>
+    <a href="#s1">1. Stage 0 &amp; Pipeline</a>
+    <a href="#s2">2. Stage I (hr_rot)</a>
+    <a href="#s3">3. Stage II (F_2 Peeling)</a>
+    <a href="#s4">4. Stage III &amp; Z_2^4 Gauge</a>
+    <a href="#s5">5. Stage IV (S_0(bx) &amp; uint8)</a>
+    <a href="#s6">6. Final Spec &amp; "a" Trace</a>
+    <a href="#s7">7. Dual Controls &amp; Holdout</a>
+    <a href="#s8">8. Executable Blueprint</a>
+    <a href="#s9">9. Offline Simulators</a>
+    <a href="#s10">10. Provenance &amp; Fixtures</a>
+  </div>
+</nav>
+
+<main>
+
+<section id="s0" class="card">
+  <h2>0. Black-Box Oracle Contract and Phase 0 Ground Facts</h2>
+  <p>The target archiver (<code>RAR.EXE</code>) is treated strictly as an opaque <strong>black-box oracle</strong> <code>O(pw, n) -&gt; bytes[n]</code> without ever opening, disassembling, or inspecting binary instructions or runtime memory. Encrypting an all-zero (<code>0x00</code>) plaintext in Store mode (<code>-m0</code>) yields the raw keystream directly from the encrypted payload region.</p>
+  <table>
+    <thead><tr><th>Phase 0 Empirical Fact</th><th>Experimental Evidence</th><th>Constraint on Derivation</th></tr></thead>
+    <tbody>
+      <tr><td>Deterministic keystream &amp; Store XOR</td><td>Independent of filename, timestamp, and plaintext for a fixed password; <code>stored = plain ^ ks</code> (60/60 + 20/20 verified)</td><td>Validates pure additive stream model <code>G(pw, n)</code></td></tr>
+      <tr><td><strong>77-byte password prefix cutoff</strong></td><td>77-prefix pairs with equal <code>pw[:77]</code> and distinct trailing bytes yield 100% identical keystreams (30/30 + 16/16 pairs)</td><td>Fixes effective input domain <code>e = pw[:77]</code></td></tr>
+      <tr><td>Single shared keystream across methods</td><td>Both Store (<code>0x30</code>) and compressed methods (<code>0x31..0x35</code>) decrypt with the exact same keystream (<code>108/108</code>)</td><td>One generator suffices for all methods (<code>0x30..0x35</code>)</td></tr>
+      <tr><td>Raw unsigned byte domain (<code>0x01..0xFF</code>)</td><td><code>248/255</code> single-byte passwords accepted by DOS harness (only 8 DOS shell metacharacters excluded), including <code>0x80..0xFF</code></td><td>Requires explicit <code>uint8_t</code> vs <code>int8_t</code> separation (Stage IV)</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section id="s1" class="card">
+  <h2>1. Pipeline Overview &amp; Stage 0 (Polynomial, Weight Collapse, Search Class)</h2>
+  <p>Combining <strong>data-derived algebraic invariants</strong> with the <strong>owner-approved starting hypothesis class (<code>AMENDMENT-2026-11-16</code>)</strong> reduces the search space to a parameterized 5-word family with <strong>zero hardcoded target constants</strong>.</p>
+  <ul>
+    <li><span class="badge b-data">DATA-DERIVED</span> <strong>Linear CRC-32 Structure (<code>Cycle 208</code>)</strong>: The F<sub>2</sub> reverse recurrence of fixed-length differential kernels annihilates the degree-33 polynomial <code>0x30D4326D9 = (x + 1) * 0x104C11DB7</code>, surfacing the degree-32 primitive polynomial <code>0x104C11DB7</code>.</li>
+    <li><span class="badge b-prior">APPROVED-PRIOR</span> <strong><code>RECALL-208 / RECALL-209</code></strong>: Interprets the observed <code>0x104C11DB7</code> polynomial as the standard IEEE 802.3 reflected CRC-32 table <code>T_ref</code> (<code>0xEDB88320</code>) and adopts a small 16-bit word state class (purely as a mathematical hypothesis, not a physical CPU/register claim) as the starting search family.</li>
+    <li><span class="badge b-data">DATA-DERIVED</span> <strong><code>Cycle 238/239</code> Weight Collapse &amp; Bit-0 Invariance (<code>Cycle 259/265</code>)</strong>: Multiplying empirical weights by the modular inverse <code>(-3573) * 0x89A3 == 1 (mod 2<sup>16</sup>)</code> collapses all 256 byte weights to <code>H = sum_{c in e} ((T_ref[c] &gt;&gt; 16) + c) mod 2<sup>16</sup></code>. Moreover, <code>(crc &gt;&gt; 1, bx, acc &gt;&gt; 1)</code> determines the first 512 bytes and <code>R &amp; 1</code> (CRC bit 0) is completely inert.</li>
+  </ul>
+
+  <div class="svg-wrap">
+    <svg viewBox="0 0 1060 300" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="4-Stage Constructive Derivation Pipeline and 5-Word Keystream Machine">
+      <defs>
+        <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 1 L 10 5 L 0 9 z" fill="#145388"/>
+        </marker>
+      </defs>
+      <text x="16" y="24" font-size="14" font-weight="700" fill="#0f2c47">(a) 4-Stage Constructive Peeling Pipeline (Cycle 324: Zero Hardcoded Target Constants)</text>
+      <rect x="16" y="38" width="225" height="92" rx="8" fill="#eef4fa" stroke="#145388" stroke-width="1.5"/>
+      <text x="28" y="60" font-size="12" font-weight="700" fill="#145388">Stage I: c248 Fibres</text>
+      <text x="28" y="79" font-size="11" fill="#17212b">Const (R, bx): 5,888 pairs</text>
+      <text x="28" y="96" font-size="11" fill="#17212b">Exhaustive r_h in 0..15</text>
+      <text x="28" y="116" font-size="12" font-weight="700" fill="#137333">-&gt; unique hr_rot = 2</text>
+
+      <line x1="241" y1="84" x2="275" y2="84" stroke="#145388" stroke-width="2" marker-end="url(#arr)"/>
+
+      <rect x="279" y="38" width="245" height="92" rx="8" fill="#eef4fa" stroke="#145388" stroke-width="1.5"/>
+      <text x="291" y="60" font-size="12" font-weight="700" fill="#145388">Stage II: c239 GF(2) Peeling</text>
+      <text x="291" y="79" font-size="11" fill="#17212b">Left-nullspace K (dim &gt;= 217)</text>
+      <text x="291" y="96" font-size="11" fill="#17212b">Bit k=8..15 -&gt; add_c mod 2^15</text>
+      <text x="291" y="116" font-size="12" font-weight="700" fill="#137333">-&gt; 0x1234, [0x7200..0x7220], m1=1, t=1</text>
+
+      <line x1="524" y1="84" x2="558" y2="84" stroke="#145388" stroke-width="2" marker-end="url(#arr)"/>
+
+      <rect x="562" y="38" width="235" height="92" rx="8" fill="#eef4fa" stroke="#145388" stroke-width="1.5"/>
+      <text x="574" y="60" font-size="12" font-weight="700" fill="#145388">Stage III: Byte 1 + Z_2^4 Orbit</text>
+      <text x="574" y="79" font-size="11" fill="#17212b">W1 hi = out[0]; 33x128 scan</text>
+      <text x="574" y="96" font-size="11" fill="#17212b">4,096-tuple 16-byte verify</text>
+      <text x="574" y="116" font-size="12" font-weight="700" fill="#137333">-&gt; m=2, t=1, acc=True, 8-orbit</text>
+
+      <line x1="797" y1="84" x2="831" y2="84" stroke="#145388" stroke-width="2" marker-end="url(#arr)"/>
+
+      <rect x="835" y="38" width="210" height="92" rx="8" fill="#e6f4ea" stroke="#137333" stroke-width="1.5"/>
+      <text x="847" y="60" font-size="12" font-weight="700" fill="#137333">Stage IV: c247 + k109</text>
+      <text x="847" y="79" font-size="11" fill="#17212b">128 bx bins x 65,536 scan</text>
+      <text x="847" y="96" font-size="11" fill="#17212b">Raw 0x80..0xFF uint8 check</text>
+      <text x="847" y="116" font-size="12" font-weight="700" fill="#137333">-&gt; S_0(c) = FFFF^T_LO[c]^c</text>
+
+      <text x="16" y="164" font-size="14" font-weight="700" fill="#0f2c47">(b) Derived 5-Word Live Keystream Recurrence G(pw, n)</text>
+      <rect x="16" y="178" width="220" height="106" rx="8" fill="#fef7e0" stroke="#b45309" stroke-width="1.5"/>
+      <text x="28" y="198" font-size="12" font-weight="700" fill="#8a5300">Key Schedule (e = pw[:77])</text>
+      <text x="28" y="218" font-size="11" fill="#17212b">R = crc32_unfinalized(e)</text>
+      <text x="28" y="236" font-size="11" fill="#17212b">H = sum((T_HI[c] + c)) mod 2^16</text>
+      <text x="28" y="254" font-size="11" fill="#17212b">S_0 = 0xFFFF ^ XOR(T_LO[c] ^ c)</text>
+      <text x="28" y="272" font-size="11" fill="#526273">W=R_LO, M=rol16(R_HI,1), K2=FFFF</text>
+
+      <line x1="236" y1="231" x2="275" y2="231" stroke="#145388" stroke-width="2" marker-end="url(#arr)"/>
+
+      <rect x="279" y="178" width="535" height="106" rx="8" fill="#ffffff" stroke="#145388" stroke-width="1.5"/>
+      <text x="293" y="198" font-size="12" font-weight="700" fill="#145388">Per-Byte Step (i = 0 .. n-1)</text>
+      <text x="293" y="218" font-size="11.5" font-family="monospace" fill="#17212b">1. W' = (W + 0x1234) &amp; 0xFFFF;  u = (W' &gt;&gt; 1) &amp; 0xFF;  t = T_ref[u]</text>
+      <text x="293" y="237" font-size="11.5" font-family="monospace" fill="#17212b">2. S  = (S + (t &gt;&gt; 16)) &amp; 0xFFFF;  M = ror16(M, 2) ^ ror16(t &amp; FFFF, 1)</text>
+      <text x="293" y="256" font-size="11.5" font-family="monospace" fill="#17212b">3. K2 ^= M;   Hr = ror16(Hr, 2);   W_next = W' ^ S ^ Hr ^ K2</text>
+      <text x="293" y="274" font-size="11" fill="#526273">(Bit 0 never carries into u; Bit 15 never carries out of 16-bit additions =&gt; exact Z_2^4 orbit)</text>
+
+      <line x1="814" y1="231" x2="852" y2="231" stroke="#137333" stroke-width="2" marker-end="url(#arr)"/>
+
+      <rect x="856" y="198" width="188" height="66" rx="8" fill="#e6f4ea" stroke="#137333" stroke-width="1.5"/>
+      <text x="872" y="224" font-size="13" font-weight="700" fill="#137333">out[i] = W_next &gt;&gt; 8</text>
+      <text x="872" y="247" font-size="11" fill="#17212b">Exact RAR 1.5 Byte [i]</text>
+    </svg>
+  </div>
+
+  <h3>Parameterized Search Class</h3>
+  <p>Under the <code>RECALL-208/209</code> hypothesis family, the unknown tuple is <code>theta = (hr_rot, add_c, m1_rot, m_rot, t_rot, acc_k2, K2_0, S_0(c))</code>. Instead of brute-forcing the &gt;= 2<sup>64</sup> space, Stages I-IV slice orthogonal observables so that each stage inspects at most <strong>65,536</strong> candidates.</p>
+</section>
+
+<section id="s2" class="card">
+  <h2>2. Stage I &mdash; Constant-<code>(R, b<sub>x</sub>)</code> Fibres Isolate <code>H</code> Rotation (<code>hr_rot</code>)</h2>
+  <p>Select passwords whose effective prefixes <code>e = pw[:77]</code> collide in both <code>R = crc32_unfinalized(e)</code> and <code>b_x = XOR_{c in e} c</code> (<code>work/c248/oracle.json</code>: <code>6,144</code> rows giving <code>5,888</code> same-<code>(R, b_x)</code> pairs). Inside any constant-<code>(R, b_x)</code> fibre, <code>W_0, S_0, M_1, K_{2,1}, u_0</code> cancel identically, so differences in <code>out[0]</code> isolate the additive weight accumulator <code>H</code> alone.</p>
+  <div class="math">out^(a)[0] XOR out^(b)[0] == (ror16(H^(a), hr_rot) &gt;&gt; 8) XOR (ror16(H^(b), hr_rot) &gt;&gt; 8)</div>
+  <ul>
+    <li>Scanning all 16 rotations <code>hr_rot in 0..15</code> leaves <strong><code>hr_rot = 2</code> as the unique zero-error survivor</strong>; the runner-up fails on <code>5,857</code> pairs.</li>
+    <li>Peeling off <code>H</code> defines the clean residual <code>Y_0 = out[0] ^ (ror16(H, 2) &gt;&gt; 8)</code> at byte 0.</li>
+  </ul>
+  <pre><code># Stage I minimal reproducible recipe (requires only c248 constant-(R, bx) anchor pairs)
+survivors = []
+for hr_rot in range(16):
+    err = 0
+    for row_a, row_b in same_R_bx_pairs:
+        pred_diff = ((ror16(H(row_a), hr_rot) &gt;&gt; 8) ^ (ror16(H(row_b), hr_rot) &gt;&gt; 8))
+        if (row_a.out[0] ^ row_b.out[0]) != pred_diff:
+            err += 1
+    if err == 0:
+        survivors.append(hr_rot)
+# Result on c248 (5,888 pairs): survivors == [2], min_other_err == 5,857</code></pre>
+</section>
+
+<section id="s3" class="card">
+  <h2>3. Stage II &mdash; F<sub>2</sub> Left-Nullspace Bit-Peeling (<code>c239</code> Byte 0)</h2>
+  <p>Using 2,095 constant-<code>b_x = 0x4c</code> rows (<code>work/c239/oracle.json</code>), recover <code>add_c</code> and the slice constant <code>s_0 = S_0(0x4c)</code>. Writing <code>R_LO = R &amp; 0xFFFF</code>, <code>R_HI = (R &gt;&gt; 16) &amp; 0xFFFF</code>, and <code>u_0 = ((R_LO + add_c) &gt;&gt; 1) &amp; 0xFF</code>, each output bit <code>b in 0..7</code> (16-bit index <code>k = 8 + b</code>) of the <code>H</code>-stripped byte <code>Y_0</code> obeys:</p>
+  <div class="math">((Y_0 &gt;&gt; b) &amp; 1) XOR (((R_LO + add_c) &gt;&gt; k) &amp; 1) XOR (((s_0 + T_HI[u_0]) &gt;&gt; k) &amp; 1)
+  == (K_{2,1} &gt;&gt; k) &amp; 1  in  span_F2(1, R_HI[0..15], T_LO[u_0][0..15])   [33 columns]</div>
+  <ol>
+    <li><strong>Exhaustive bit-8 (<code>b = 0</code>) scan</strong>: On <code>250</code> rows, compute an F<sub>2</sub> left-nullspace basis <code>K</code> (dim <code>&gt;= 217</code>, random false-positive prob. ~ 2<sup>-217</sup>) of the <code>33</code>-column design matrix <code>X(u_0) = [1 | R_HI | T_LO[u_0]]</code>. Because <code>u_0</code> depends only on <code>add_c mod 512</code>, scanning all <code>(add_lo9 even, s0_lo8)</code> = <code>256 * 256 = 65,536</code> pairs returns <strong><code>392</code> survivors</strong> (<code>add_lo9 in ['0x134', '0x1b4', '0x34', '0xb4']</code>).</li>
+    <li><strong>Upward bit peeling (<code>k = 9..15</code>)</strong>: Lifting surviving candidates one bit per round across bits 9..15 uniquely fixes <strong><code>add_c mod 2<sup>15</sup> = 0x1234</code></strong> and narrows <code>s_0(0x4c) mod 2<sup>15</sup></code> to the exact <code>33</code>-element band <strong><code>[0x7200 .. 0x7220]</code></strong>.</li>
+    <li><strong>Why the 33-value band is mathematically forced</strong>: In the IEEE 802.3 table, <code>max_u (T_HI[u] &amp; 0xFF) == 0xDF</code>. Thus whenever <code>s0_lo8 in [0x00 .. 0x20]</code>, we have <code>(T_HI[u] &amp; 0xFF) + s0_lo8 &lt;= 0xDF + 0x20 = 0xFF &lt; 256</code>, producing <strong>zero carry from bit 7 into bit 8 for all <code>u_0</code></strong>. Hence byte 0 alone cannot distinguish those 33 values; byte 1 (Stage III) breaks the tie.</li>
+    <li><strong><code>K_{2,1}</code> rotation recovery</strong>: Testing <code>Z_0 = Y_0 ^ ((R_LO + 0x1234) &gt;&gt; 8) ^ ((s_0 + T_HI[u_0]) &gt;&gt; 8)</code> over all 2,095 rows gives <code>stage2_z0_gf2_err == 0</code> and uniquely selects <strong><code>(m1_rot = 1, t_rot = 1, const_hi = 0x7F)</code></strong> among all <code>16 x 16 = 256</code> rotation pairs.</li>
+  </ol>
+  <pre><code># Stage II peeling summary (pseudo-Python matching c324_constructive_bridge.py)
+# Step A (k=8): scan (add_lo9 in range(0, 512, 2)) x (s0_lo8 in range(256)) = 65,536 pairs
+#   reject whenever (left_nullspace(X(u0)) @ rhs_bit8) % 2 != 0  -&gt; 392 survivors
+# Step B (k=9..15): lift add_c bits 9..14 and s0 bits 8..14 one bit per round using rhs_bit(k)
+#   -&gt; unique add_c mod 2^15 = 0x1234, s0 mod 2^15 in [0x7200 .. 0x7220] (33 candidates)
+# Step C: check Z0 == ((ror16(rol16(R_HI, m1_rot) ^ ror16(T_LO[u0], t_rot) ^ K2_0)) &gt;&gt; 8)
+#   across all 16x16 (m1_rot, t_rot) -&gt; unique (m1_rot=1, t_rot=1, K2_0_hi=0x7F)</code></pre>
+</section>
+
+<section id="s4" class="card">
+  <h2>4. Stage III &mdash; Byte 1 Peeling &amp; Black-Box <code>Z<sub>2</sub><sup>4</sup></code> Gauge Equivalence Theorem</h2>
+  <h3>4.1 Byte 1 (<code>out[1]</code>) Pins <code>s0_lo8</code> and Step Rotations</h3>
+  <p>At step <code>i = 1</code>, the upper byte of input word <code>W_1</code> is <strong>directly the observed output byte <code>out[0]</code></strong>! Its lower byte depends only on <code>R_LO, u_0, s0_lo8, k2_lo8</code>, so <code>u_1 = ((W_1 + add_c) &gt;&gt; 1) &amp; 0xFF</code> is governed by just <code>33 x 128 = 4,224</code> candidate pairs <code>(s0_lo8 in [0x00..0x20], even k2_lo8 in 0..254)</code>.</p>
+  <ul>
+    <li>Checking the low two bits of <code>Y_1</code> against the <code>49</code>-column F<sub>2</sub> design span <code>[1 | R_HI | T_LO[u_0] | T_LO[u_1]]</code> on 70 rows uniquely isolates <strong><code>s0_lo8 = 0x08</code> paired with <code>k2_lo8 in {0xFE, 0xFF}</code></strong>.</li>
+    <li>The remaining search over <code>2<sup>3</sup> = 8</code> bit-15/bit-0 gauge choices, <code>acc_k2 in {False, True}</code>, and <code>16 x 16 = 256</code> step rotations is only <strong><code>4,096</code> tuples</strong>. Evaluating all 2,095 rows x 16 bytes uniquely pins <code>acc_k2 = True</code>, <code>m_rot = 2</code>, <code>t_rot = 1</code>, leaving an exact <strong><code>8</code>-element zero-error orbit</strong>.</li>
+  </ul>
+
+  <h3>4.2 Black-Box <code>Z<sub>2</sub><sup>4</sup></code> Gauge Equivalence &amp; Parity-Collapse Lemma</h3>
+  <div class="callout ok">
+    <strong>Theorem (Exact Black-Box Z<sub>2</sub><sup>4</sup> Gauge Equivalence)</strong>: Whenever <code>add_c</code> is <strong>even</strong>, for every <code>(r, a, b, d) in {0,1}<sup>4</sup></code>, the 16 parameterizations below generate <strong>bit-for-bit identical keystreams on all passwords <code>pw</code> and all output lengths <code>n</code></strong>:<br>
+    <code>(R ^ r,  0x1234 ^ (a &lt;&lt; 15),  S_0(c) ^ (b &lt;&lt; 15),  0x7FFE ^ ((a ^ b) &lt;&lt; 15) ^ d)</code>
+  </div>
+  <ul>
+    <li><strong>LSB Decoupling (<code>r, d</code>)</strong>: Because <code>add_c</code> is even, <code>W + add_c</code> never carries from bit 0 to bit 1. Flipping <code>R[0]</code> (<code>r</code>) or <code>K2_0[0]</code> (<code>d</code>) merely toggles bit 0 of <code>W</code> at every step, permanently decoupled from <code>u_i = ((W + add_c) &gt;&gt; 1) &amp; 0xFF</code> and output byte <code>W &gt;&gt; 8</code>.</li>
+    <li><strong>MSB Carry-Free Linearity (<code>a, b</code>)</strong>: In mod-2<sup>16</sup> addition, bit 15 (<code>0x8000</code>) has no higher bit to carry into, is discarded by <code>(W + add_c) &gt;&gt; 1</code>, and enters <code>W_next = W' ^ S ^ Hr ^ K2</code> purely linearly via XOR. Flipping <code>K2_0[15]</code> by <code>a ^ b</code> cancels bit-15 flips in <code>add_c</code> (<code>a</code>) and <code>S_0</code> (<code>b</code>) identically at every byte.</li>
+    <li><strong>Corollary (Parity-Collapse Lemma)</strong>: If the underlying generator uses an <strong>odd</strong> constant (<code>add_c &amp; 1 == 1</code>), then <code>W[0] = 1</code> generates a bit-0 -&gt; bit-1 carry into <code>u_i</code>, coupling <code>r</code> and <code>d</code> to the observable output and collapsing the 8-element orbit to <strong>4 MSB-only elements (<code>Z<sub>2</sub><sup>2</sup></code>)</strong> (empirically verified in Section 7 via <code>Planted Odd 0x5A7D</code>).</li>
+  </ul>
+  <table>
+    <thead><tr><th>#</th><th><code>add_c</code></th><th><code>S_0(0x4c)</code></th><th><code>K2_0</code></th><th>Gauge <code>(a, b, d)</code></th><th>Role</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td><code>0x1234</code></td><td><code>0x7208</code></td><td><code>0x7ffe</code></td><td><code>a=0, b=0, d=0</code></td><td>Solver Min</td></tr>
+<tr><td>2</td><td><code>0x1234</code></td><td><code>0x7208</code></td><td><code>0x7fff</code></td><td><code>a=0, b=0, d=1</code></td><td>Exact Equivalent</td></tr>
+<tr><td>3</td><td><code>0x1234</code></td><td><code>0xf208</code></td><td><code>0xfffe</code></td><td><code>a=0, b=1, d=0</code></td><td>Exact Equivalent</td></tr>
+<tr><td>4</td><td><code>0x1234</code></td><td><code>0xf208</code></td><td><code>0xffff</code></td><td><code>a=0, b=1, d=1</code></td><td>Canonical (Cycle 323 / libcleanroom)</td></tr>
+<tr><td>5</td><td><code>0x9234</code></td><td><code>0x7208</code></td><td><code>0xfffe</code></td><td><code>a=1, b=0, d=0</code></td><td>Exact Equivalent</td></tr>
+<tr><td>6</td><td><code>0x9234</code></td><td><code>0x7208</code></td><td><code>0xffff</code></td><td><code>a=1, b=0, d=1</code></td><td>Exact Equivalent</td></tr>
+<tr><td>7</td><td><code>0x9234</code></td><td><code>0xf208</code></td><td><code>0x7ffe</code></td><td><code>a=1, b=1, d=0</code></td><td>Exact Equivalent</td></tr>
+<tr><td>8</td><td><code>0x9234</code></td><td><code>0xf208</code></td><td><code>0x7fff</code></td><td><code>a=1, b=1, d=1</code></td><td>Exact Equivalent</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section id="s5" class="card">
+  <h2>5. Stage IV &mdash; Full <code>128</code>-Bin <code>S_0(b<sub>x</sub>)</code> Table &amp; Unsigned <code>uint8_t</code> Promotion</h2>
+  <p>Fixing the canonical gauge representative (<code>(a=0, b=1, d=1) -&gt; add_c = 0x1234, S_0(0x4c) = 0xF208, K2_0 = 0xFFFF</code>), Stage IV exhaustively scans all 65,536 values of <code>s_0</code> across each of the 128 <code>b_x in 0..127</code> bins of <code>work/c247/oracle.json</code> (32 rows/bin).</p>
+  <ul>
+    <li><strong>Unique solution in <code>128 / 128</code> bins</strong>: Zero ties occur (<code>stage4_non_unique_bins = []</code>); the 128 solved values satisfy <code>stage4_gf2_err_128 = 0</code> (exact GF(2)-affine map), whose 7 basis vectors (<code>0x3097, 0x612e, 0xc41d, 0x883a, 0x1074, 0x20e8, 0x41d0</code>) and zero offset <code>S_0(0) = 0xFFFF</code> match <strong><code>S_0(b_x) == 0xFFFF ^ (T_ref[b_x] &amp; 0xFFFF) ^ b_x</code> across <code>128/128</code> bins</strong>.</li>
+    <li><strong><code>0x80..0xFF</code> Raw-Byte 2x2 Factorial Test (<code>k109</code>)</strong>: Evaluating 400 raw passwords in <code>0007-k109_pw.json.gz</code> settles signed vs unsigned <code>char</code> promotion and whether bit 7 of <code>c</code> indexes <code>T_LO[c]</code> or <code>T_LO[c &amp; 0x7F]</code>:</li>
+  </ul>
+  <table>
+    <thead><tr><th>Byte Promotion &amp; Table Indexing Variant</th><th><code>err_rows / 400</code></th><th><code>err_bytes / 25,600</code></th><th>Verdict</th></tr></thead>
+    <tbody>
+      <tr><td><strong><code>signed=False (uint8_t), full T_LO[c]</code></strong></td><td><strong><code>0</code></strong></td><td><strong><code>0</code></strong></td><td><span class="badge b-ok">UNIQUE EXACT</span></td></tr>
+      <tr><td><code>signed=False, T_LO[c &amp; 0x7F] (no bit7)</code></td><td><code>126</code></td><td><code>8,045</code></td><td>Rejected (bit 7 of T_LO[c] required)</td></tr>
+      <tr><td><code>signed=True (int8_t), full T_LO[c]</code></td><td><code>240</code></td><td><code>15,302</code></td><td>Rejected (signed char wrong)</td></tr>
+      <tr><td><code>signed=True (int8_t), no bit7</code></td><td><code>240</code></td><td><code>15,304</code></td><td>Rejected</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section id="s6" class="card">
+  <h2>6. Final Algorithm Specification, Reference C99 Code &amp; Trace Table</h2>
+  <div class="grid-2">
+    <div>
+      <h3>6.1 Standalone C99 Reference (<code>tools/libcleanroom/src/rar15_cipher.c</code>)</h3>
+      <p>Implemented with zero mutable global state, zero external symbol imports (<code>nm -u rar15_cipher.o</code> = 0), and stack-local CRC-32 table generation.</p>
+      <pre><code>/* rar15_cipher.c - RAR 1.5 stream cipher: block XOR + keystream generator.
+ *
+ * Implements rar15_decrypt_block and rar15_keystream in standalone clean-room C99 from
+ * mathematics alone using the IEEE 802.3 CRC-32 polynomial (0xEDB88320, generated from its
+ * definition on the stack for full reentrancy with zero global state or external libc calls)
+ * and the Cycle 323/324 verified key-schedule and 5-word (&lt;=54-bit initial) 16-bit recurrence --
+ * zero runtime oracle calls, zero stored keystreams, zero external/third-party archiver source.
+ *
+ * Provenance (Amendment 2026-11-16, Cycles 323-324):
+ *   APPROVED-PRIOR : RECALL-208 (small 16-bit word state hypothesis class, non-physical),
+ *                    RECALL-209 (IEEE 802.3 CRC-32 polynomial 0xEDB88320 candidate structure).
+ *   DATA-DERIVED   : 77-byte prefix truncation, unsigned byte promotion, R/H/S accumulators,
+ *                    5x16-bit live loop state (w, m, k2, hr, s_state), +0x1234 step,
+ *                    ror16(_,2)/ror16(_,1), K2^=M, W&gt;&gt;8; unique up to Cycle 324 Z_2^3/Z_2^4
+ *                    black-box gauge equivalence.
+ *
+ * SPDX-License-Identifier: MIT
+ */
+#include &quot;rar15.h&quot;
+
+static void build_crc32_table(uint32_t tbl[256]) {
+    for (uint32_t i = 0; i &lt; 256u; i++) {
+        uint32_t c = i;
+        for (int k = 0; k &lt; 8; k++)
+            c = (c &amp; 1u) ? (0xEDB88320u ^ (c &gt;&gt; 1)) : (c &gt;&gt; 1);
+        tbl[i] = c;
+    }
+}
+
+static uint16_t rol16(uint16_t x, unsigned r) {
+    r &amp;= 15u;
+    if (!r) return x;
+    return (uint16_t)((((uint32_t)x &lt;&lt; r) | ((uint32_t)x &gt;&gt; (16u - r))) &amp; 0xFFFFu);
+}
+
+static uint16_t ror16(uint16_t x, unsigned r) {
+    r &amp;= 15u;
+    if (!r) return x;
+    return (uint16_t)((((uint32_t)x &gt;&gt; r) | ((uint32_t)x &lt;&lt; (16u - r))) &amp; 0xFFFFu);
+}
+
+int rar15_decrypt_block(uint8_t *data, size_t data_len, const uint8_t *ks, size_t ks_len) {
+    if (!data || !ks) return RAR15_ERR_PARAM;
+    if (ks_len &lt; data_len) return RAR15_ERR_BUFFER;
+    for (size_t i = 0; i &lt; data_len; i++)
+        data[i] ^= ks[i];
+    return RAR15_OK;
+}
+
+size_t rar15_keystream(const char *password, uint8_t *out, size_t max_out) {
+    if (!password || !out || max_out == 0)
+        return 0;
+
+    uint32_t crc_tbl[256];
+    build_crc32_table(crc_tbl);
+
+    size_t plen = 0;
+    while (plen &lt; 77u &amp;&amp; password[plen] != &#x27;\0&#x27;)
+        plen++;
+
+    const uint8_t *pw = (const uint8_t *)password;
+    uint32_t r_state = 0xFFFFFFFFu;
+    uint16_t h_state = 0u;
+    uint16_t s_state = 0xFFFFu;
+    for (size_t i = 0; i &lt; plen; i++) {
+        uint8_t c = pw[i];
+        r_state = (r_state &gt;&gt; 8) ^ crc_tbl[(r_state ^ c) &amp; 0xFFu];
+        h_state = (uint16_t)(h_state + (uint16_t)(crc_tbl[c] &gt;&gt; 16) + (uint16_t)c);
+        s_state ^= (uint16_t)((crc_tbl[c] &amp; 0xFFFFu) ^ (uint16_t)c);
+    }
+
+    uint16_t w = (uint16_t)(r_state &amp; 0xFFFFu);
+    uint16_t m = rol16((uint16_t)((r_state &gt;&gt; 16) &amp; 0xFFFFu), 1u);
+    uint16_t k2 = 0xFFFFu;
+    uint16_t hr = h_state;
+
+    for (size_t i = 0; i &lt; max_out; i++) {
+        w = (uint16_t)(w + 0x1234u);
+        uint32_t t = crc_tbl[(w &gt;&gt; 1) &amp; 0xFFu];
+        s_state = (uint16_t)(s_state + (uint16_t)(t &gt;&gt; 16));
+        m = (uint16_t)(ror16(m, 2u) ^ ror16((uint16_t)(t &amp; 0xFFFFu), 1u));
+        k2 ^= m;
+        hr = ror16(hr, 2u);
+        w ^= (uint16_t)(s_state ^ hr ^ k2);
+        out[i] = (uint8_t)(w &gt;&gt; 8);
+    }
+    return max_out;
+}
+</code></pre>
+    </div>
+    <div>
+      <h3>6.2 Verification Test Vectors (16 Bytes)</h3>
+      <ul>
+        <li><code>pw = b"a"</code> (<code>0x61</code>):<br>
+          Init: <code>R=0x174841bc, H=0x3b16, S_0=0xae50, W=0x41bc, M=0x2e90, K2=0xffff</code><br>
+          Hex: <code>752fa544495d1c9257bd3d4d73a4f54b</code>
+        </li>
+        <li><code>pw = b"abc"</code>:<br>
+          Init: <code>R=0xcadbbe3d, H=0xb452, S_0=0x9ec7</code><br>
+          Hex: <code>fdba8b6197e7b70832f745b9c16df7b0</code>
+        </li>
+        <li><code>pw = bytes([0x80, 0xFF])</code> (raw non-ASCII 2B):<br>
+          Init: <code>R=0xa8a79ac6, H=0x1c39, S_0=0x932d</code><br>
+          Hex: <code>87fb039f8820be70651dfaa047720dfb</code>
+        </li>
+      </ul>
+      <h3>6.3 Step-by-Step Trace for <code>pw = "a"</code> (First 8 Bytes)</h3>
+      <div style="overflow-x:auto;">
+      <table>
+        <thead><tr><th><code>i</code></th><th><code>W_in</code></th><th><code>W+1234</code></th><th><code>u</code></th><th><code>T_ref[u]</code></th><th><code>S</code></th><th><code>M</code></th><th><code>K2</code></th><th><code>Hr</code></th><th><code>W_out</code></th><th><code>out[i]</code></th></tr></thead>
+        <tbody>
+          <tr><td>0</td><td><code>0x41bc</code></td><td><code>0x53f0</code></td><td><code>0xf8</code></td><td><code>0xb3667a2e</code></td><td><code>0x61b6</code></td><td><code>0x36b3</code></td><td><code>0xc94c</code></td><td><code>0x8ec5</code></td><td><code>0x75cf</code></td><td><strong><code>0x75</code></strong></td></tr>
+<tr><td>1</td><td><code>0x75cf</code></td><td><code>0x8803</code></td><td><code>0x01</code></td><td><code>0x77073096</code></td><td><code>0xd8bd</code></td><td><code>0xd5e7</code></td><td><code>0x1cab</code></td><td><code>0x63b1</code></td><td><code>0x2fa4</code></td><td><strong><code>0x2f</code></strong></td></tr>
+<tr><td>2</td><td><code>0x2fa4</code></td><td><code>0x41d8</code></td><td><code>0xec</code></td><td><code>0xa9bcae53</code></td><td><code>0x8279</code></td><td><code>0x2250</code></td><td><code>0x3efb</code></td><td><code>0x58ec</code></td><td><code>0xa5b6</code></td><td><strong><code>0xa5</code></strong></td></tr>
+<tr><td>3</td><td><code>0xa5b6</code></td><td><code>0xb7ea</code></td><td><code>0xf5</code></td><td><code>0xcdd70693</code></td><td><code>0x5050</code></td><td><code>0x8bdd</code></td><td><code>0xb526</code></td><td><code>0x163b</code></td><td><code>0x44a7</code></td><td><strong><code>0x44</code></strong></td></tr>
+<tr><td>4</td><td><code>0x44a7</code></td><td><code>0x56db</code></td><td><code>0x6d</code></td><td><code>0x33031de5</code></td><td><code>0x8353</code></td><td><code>0xec05</code></td><td><code>0x5923</code></td><td><code>0xc58e</code></td><td><code>0x4925</code></td><td><strong><code>0x49</code></strong></td></tr>
+<tr><td>5</td><td><code>0x4925</code></td><td><code>0x5b59</code></td><td><code>0xac</code></td><td><code>0xdf60efc3</code></td><td><code>0x62b3</code></td><td><code>0x8ce0</code></td><td><code>0xd5c3</code></td><td><code>0xb163</code></td><td><code>0x5d4a</code></td><td><strong><code>0x5d</code></strong></td></tr>
+<tr><td>6</td><td><code>0x5d4a</code></td><td><code>0x6f7e</code></td><td><code>0xbf</code></td><td><code>0x5bdeae1d</code></td><td><code>0xbe91</code></td><td><code>0xf436</code></td><td><code>0x21f5</code></td><td><code>0xec58</code></td><td><code>0x1c42</code></td><td><strong><code>0x1c</code></strong></td></tr>
+<tr><td>7</td><td><code>0x1c42</code></td><td><code>0x2e76</code></td><td><code>0x3b</code></td><td><code>0xb10be924</code></td><td><code>0x6f9c</code></td><td><code>0xc99f</code></td><td><code>0xe86a</code></td><td><code>0x3b16</code></td><td><code>0x9296</code></td><td><strong><code>0x92</code></strong></td></tr>
+        </tbody>
+      </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="s7" class="card">
+  <h2>7. Dual Controls (Planted Positive / Unpruned Negative) &amp; Blind Holdout</h2>
+  <p>To confirm that the constructive solver is neither tuned nor biased toward RAR 1.5 constants, the exact same zero-hardcoded pipeline was evaluated against synthetic planted parameters (Even and Odd parity) and four unpruned negative corpora.</p>
+  <div class="grid-2">
+    <div>
+      <h3>Planted Positive Controls (<code>controls.json</code>)</h3>
+      <ul>
+        <li><strong>Planted Even</strong> (<code>add_c=0x5A7C, hr=5, m1=3, m=7, t=4, K2=0x3C9E, S0_0=0xA1B2</code>): Recovers an exact <strong><code>8</code>-element orbit</strong> with <code>planted_true_in_orbit = True</code> and <code>0</code> holdout byte errors.</li>
+        <li><strong>Planted Odd</strong> (<code>add_c=0x5A7D</code>, otherwise identical): Collapses cleanly to a <strong><code>4</code>-element MSB-only orbit</strong> per the Parity-Collapse Lemma, with <code>planted_true_in_orbit = True</code> while bit-0-flipped partners fail on <code>31,301+</code> bytes.</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Unpruned Negative Controls</h3>
+      <table>
+        <thead><tr><th>Negative Control</th><th>Stage I</th><th>Stage II</th><th>Stage III</th><th>Verdict</th></tr></thead>
+        <tbody><tr><td><code>neg_urandom</code></td><td><code>[]</code></td><td><code>None</code></td><td><code>0</code></td><td><code>FAIL_STAGE1</code></td></tr>
+<tr><td><code>neg_shuffled</code></td><td><code>[]</code></td><td><code>None</code></td><td><code>0</code></td><td><code>FAIL_STAGE1</code></td></tr>
+<tr><td><code>neg_noacc</code></td><td><code>[5]</code></td><td><code>1</code></td><td><code>8</code></td><td><code>FAIL_STAGE3_ACC_TRUE</code></td></tr>
+<tr><td><code>neg_crc32c</code></td><td><code>[]</code></td><td><code>None</code></td><td><code>0</code></td><td><code>FAIL_STAGE1</code></td></tr></tbody>
+      </table>
+    </div>
+  </div>
+  <div class="callout ok">
+    <strong>Strictly Disjoint Blind Validation (<code>Cycle 324 P6</code> + <code>6x</code> Universal Gate)</strong>: On a completely disjoint len &gt;= 4 CSPRNG blind corpus (<code>P6_safe</code> 80 rows + <code>P6_raw</code> 40 rows = <code>25,600</code> B), all 8 orbit representatives achieve <strong><code>0 / 25,600</code> B errors</strong>, 77-prefix equivalence passes <code>16/16</code>, <code>signed int8_t</code> fails <code>40 / 40</code> raw rows (<code>5,101</code> B errors), and live oracle replays pass <code>8/8</code> (+ independent <code>R1</code> <code>8/8</code>). The pinned <code>tests/universal_decryption_gate.py</code> passed <strong>6 independent runs (600 CSPRNG passwords, 1,800 encrypted store/compressed entries -&gt; <code>RESULT: ACHIEVED</code>)</strong>.
+  </div>
+</section>
+
+<section id="s8" class="card">
+  <h2>8. Executable Blueprint for Independent Human / AI Re-Derivation</h2>
+  <p>Any engineer or AI agent given black-box oracle access (or the offline datasets under <code>03-reproducible-evidence/work/</code>) can reproduce Stages 0..IV and the final C99 library using this deterministic procedure:</p>
+  <pre><code>DERIVATION_BLUEPRINT RAR15_KEYSTREAM_CLEANROOM:
+  INPUT  : Black-box oracle O(pw_bytes, n) -&gt; bytes[n] (or pre-collected offline corpora)
+  PRIORS : APPROVED-PRIOR RECALL-208 (small 16-bit word-state class)
+           APPROVED-PRIOR RECALL-209 (standard IEEE 802.3 T_ref, poly = 0xEDB88320, after observing 0x104C11DB7 in Stage 0)
+
+  STEP 0 [Oracle Probing &amp; Linear Invariant Extraction]:
+    - Collect same-prefix (len 77..85), single-byte raw (0x01..0xFF), and store-mode archives.
+    - Establish cutoff = 77, R = unfinalized_crc32(pw[:77]), bit-0 dead invariance (R &amp; 1 unused),
+      and algebraic weight collapse H(pw[:77]) = sum((T_ref[c] &gt;&gt; 16) + c) mod 2^16.
+    - Partition probe sets:
+        D_fibre (same (R, bx), varying H), e.g. c248 (6,144 rows -&gt; 5,888 same-(R,bx) pairs)
+        D_bx0   (fixed bx = XOR(pw) == 0x4c, varying R), e.g. c239 (2,095 rows, &gt;= 16 bytes)
+        D_bxall (all 128 ASCII bx values), e.g. c247 (4,096 rows = 128 x 32)
+        D_raw   (raw bytes including 0x80..0xFF), e.g. k109 (400 rows)
+
+  STEP 1 [Stage I: Isolate H rotation hr_rot on D_fibre]:
+    - Scan r in 0..15; require out_a[0] ^ out_b[0] == (ror16(H_a, r)&gt;&gt;8) ^ (ror16(H_b, r)&gt;&gt;8) for ALL pairs.
+    - Stop iff unique survivor hr_rot emerges (observed: hr_rot = 2, 0 err vs 5,857).
+    - Compute residual Y_0 = out[0] ^ (ror16(H, hr_rot) &gt;&gt; 8) on D_bx0.
+
+  STEP 2 [Stage II: GF(2) Left-Nullspace Bit-Peeling on D_bx0 Byte 0]:
+    - Fix N &gt;= 250 rows. Build 33-col GF(2) matrix X(u0) = [1 | bits(R_HI) | bits(T_LO[u0])], compute left nullspace K.
+    - Scan 65,536 pairs (add_lo9 even in 0..511, s0_lo8 in 0..255) checking (K @ rhs_bit8(add_lo9, s0_lo8)) % 2 == 0.
+    - Peel k = 9..15 upward bit-by-bit using K @ rhs_bit(k) == 0 to pin add_c mod 2^15 and narrow s0(bx0) mod 2^15.
+    - Verify Z0 residuals and scan 16x16 (m1_rot, t_rot) over GF(2) span X(u0) to uniquely fix (m1_rot, t_rot, const_hi).
+
+  STEP 3 [Stage III: Byte 1 Peeling &amp; Z_2^4 Orbit Determination on D_bx0]:
+    - Substitute W1_hi = out[0]; solve u1 = ((W1 + add_c) &gt;&gt; 1) &amp; 0xFF over surviving s0_lo8 band x even k2_lo8 (0..254).
+    - Use 49-col GF(2) span [1 | R_HI | T_LO[u0] | T_LO[u1]] on Y_1[0..1] to pin (s0_lo8, k2_lo8 &amp; 0xFE).
+    - Scan 2^3 (add_b15, s0_b15, k2_b0) x 2 (acc_k2) x 16^2 (m_rot, t_rot) = 4,096 tuples on 16+ stream bytes.
+    - Output: unique (m_rot, t_rot, acc_k2=True) and exact equivalence orbit O (size 8 if add_c even, else 4).
+
+  STEP 4 [Stage IV: Full Cross-bx Table S_0(c) &amp; Signedness Resolution]:
+    - Pick any gauge representative in O (e.g., canonical (add_c=0x1234, s0_0x4c=0xF208, K2_0=0xFFFF)).
+    - For each bx in 0..127 of D_bxall, scan s0 in 0..65535 on byte 0..15 -&gt; expect 128/128 unique survivors.
+    - Check GF(2) linearity of S_0(bx) and match against 0xFFFF ^ T_LO[bx] ^ bx.
+    - Test D_raw (c &gt;= 0x80) across {uint8, int8} x {bit7 T_LO vs masked} -&gt; expect unique 0-error unsigned match.
+
+  STEP 5 [Dual Controls &amp; Independent Blind Verification Gate]:
+    - Run SAME solver pipeline on synthetic Planted-Even, Planted-Odd (verifying Z_2^2 parity collapse), and 4 negatives.
+    - Collect strictly fresh CSPRNG blind holdouts disjoint from all training/enum corpora; require 0 byte errors.
+    - Implement standalone C99 function + unit tests; verify 0 external symbols (nm -u) and full decryption gate.</code></pre>
+</section>
+
+<section id="s9" class="card">
+  <h2>9. Offline Interactive Simulators (100% Pure Vanilla JS, Zero Network)</h2>
+  <p>Embedded pure JavaScript runs completely offline inside any browser. Inspect step-by-step 5-word transitions or test the <code>Z<sub>2</sub><sup>4</sup></code> gauge orbit and Parity-Collapse Lemma live.</p>
+
+  <div class="grid-2">
+    <div class="lab-box">
+      <h3 style="margin-top:0;">9.1 Live 5-Word Keystream &amp; Step Tracer</h3>
+      <div class="lab-controls">
+        <label>Mode:
+          <select id="simMode">
+            <option value="ascii">ASCII String</option>
+            <option value="hex">Raw Hex Bytes</option>
+          </select>
+        </label>
+        <label>Password: <input id="simPw" type="text" value="a" size="18"></label>
+        <label>Bytes: <input id="simLen" type="number" value="16" min="1" max="64" style="width:70px;"></label>
+        <button type="button" onclick="runTracer()">Run Trace</button>
+      </div>
+      <div id="simInit" class="kv-strip"></div>
+      <div style="margin:0.45rem 0; font-size:0.86rem;"><strong>Hex keystream:</strong> <code id="simHex"></code></div>
+      <div style="max-height:310px; overflow:auto;">
+        <table>
+          <thead><tr><th>i</th><th>W_in</th><th>W'</th><th>u</th><th>S</th><th>M</th><th>K2</th><th>Hr</th><th>W_out</th><th>out[i]</th></tr></thead>
+          <tbody id="simBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="lab-box">
+      <h3 style="margin-top:0;">9.2 Interactive Z<sub>2</sub><sup>4</sup> Gauge &amp; Parity-Collapse Lab</h3>
+      <p style="font-size:0.86rem; margin-top:0;">Compares the canonical tuple (<code>R, 0x1234, S_0, 0xFFFF</code>) against any gauge choice <code>(r, a, b, d)</code> across 32 bytes. Under even <code>add_c = 0x1234</code>, all 16 combinations yield <strong>0 / 32 differences</strong>; switching to odd <code>0x1235</code> with <code>r=1</code> or <code>d=1</code> immediately triggers divergence.</p>
+      <div class="lab-controls">
+        <label>Test PW: <input id="gPw" type="text" value="CleanRoomTest!" size="16"></label>
+        <label>add_c parity:
+          <select id="gParity" onchange="runGauge()">
+            <option value="even">Even (0x1234 - Real RAR15)</option>
+            <option value="odd">Odd (0x1235 - Synthetic Planted Odd)</option>
+          </select>
+        </label>
+      </div>
+      <div class="lab-controls">
+        <label><input type="checkbox" id="gR" onchange="runGauge()"> r (flip R bit 0)</label>
+        <label><input type="checkbox" id="gA" onchange="runGauge()"> a (flip add_c bit 15)</label>
+        <label><input type="checkbox" id="gB" onchange="runGauge()"> b (flip S_0 bit 15)</label>
+        <label><input type="checkbox" id="gD" onchange="runGauge()"> d (flip K2_0 bit 0)</label>
+      </div>
+      <div id="gaugeStatus" class="callout ok" style="margin:0.5rem 0;"></div>
+      <div style="font-size:0.84rem;">
+        <div><strong>Base (r=0,a=0,b=0,d=0):</strong> <code id="gBaseHex"></code></div>
+        <div style="margin-top:0.35rem;"><strong>Gauged tuple:</strong> <code id="gParams"></code></div>
+        <div style="margin-top:0.35rem;"><strong>Gauged output:</strong> <code id="gTestHex"></code></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="s10" class="card">
+  <h2>10. Provenance Boundaries, Supporting Historical Appendix &amp; Non-Legal-Advice Notice</h2>
+  <ul>
+    <li><strong>Core Constructive Proof vs. Non-Core Supporting Appendix</strong>: The mathematical validity of Stages I-IV and the C99 library rests <strong>solely on the repository archive data, the deterministic <code>Cycle 324</code> solver, the blind holdouts (<code>P6</code>), and the 6x Universal Decryption Gate</strong>. The redacted historical transparency appendix covering the ~71-minute offline search interval between <code>Cycle 322</code> and <code>Cycle 323</code> (<a href="../provenance/APPENDIX-2026-11-23-c322-c323-session-log.md">APPENDIX-2026-11-23-c322-c323-session-log.md</a> / <code>.jsonl</code>) is supporting context only and is not a logical dependency of the proof chain.</li>
+    <li><strong>Full Decryption &amp; Decompression Specification</strong>: Container parsing, stream decryption, and adaptive LZSS / Canonical Huffman decompression (<code>0x30..0x35</code>) are documented in <a href="RAR15-DECRYPT-UNPACK-SPEC.html">RAR15-DECRYPT-UNPACK-SPEC.html</a> (and <a href="RAR15-DECRYPT-UNPACK-SPEC.md">RAR15-DECRYPT-UNPACK-SPEC.md</a>).</li>
+    <li><strong>Gate Test Fixture Provenance (<code>T.TXT</code>, <code>I.PNG</code>, <code>X.EXE</code>)</strong>: All three gate fixture files (<code>tests/fixtures/gate/*</code>) are <strong>AI-generated synthetic example files</strong> confirmed by the repository owner (<code>2026-11-23</code> / <code>2026-11-24</code>); they contain zero third-party copyrighted media or commercial program binaries and carry no copyright conflict under MIT release.</li>
+    <li><strong>MIT License &amp; Non-Legal-Advice Notice</strong>: The standalone C99 library (<code>tools/libcleanroom/</code> / <code>02-mit-library/</code>) is original clean-room MIT code (including owner-provided MIT decompressor <code>u15_unpack.{h,c}</code>) with zero third-party archiver source, disassembly, hardcoded keystreams, or runtime oracle calls. <code>RAR</code> and <code>WinRAR</code> are trademarks of their respective owners; this document is a technical provenance report and does not constitute formal legal advice.</li>
+  </ul>
+</section>
+
+</main>
+<footer>
+  fultaarc-cleanroom-rar15-enc3 | Offline Self-Contained Derivation Guide | SPDX-License-Identifier: MIT
+</footer>
+
+<script>
+(function () {
+  const T_REF = new Uint32Array(256);
+  for (let i = 0; i < 256; i++) {
+    let c = i >>> 0;
+    for (let k = 0; k < 8; k++) {
+      c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) >>> 0 : (c >>> 1) >>> 0;
+    }
+    T_REF[i] = c >>> 0;
+  }
+
+  function rol16(x, r) {
+    r &= 15;
+    x &= 0xFFFF;
+    return r ? (((x << r) | (x >>> (16 - r))) & 0xFFFF) : x;
+  }
+  function ror16(x, r) {
+    r &= 15;
+    x &= 0xFFFF;
+    return r ? (((x >>> r) | (x << (16 - r))) & 0xFFFF) : x;
+  }
+  function hex(v, w) {
+    return "0x" + (v >>> 0).toString(16).padStart(w, "0");
+  }
+  function parseInput(mode, text) {
+    if (mode === "hex") {
+      const clean = text.replace(/[^0-9a-fA-F]/g, "");
+      if (clean.length % 2 !== 0) throw new Error("Hex string must have even number of digits");
+      const arr = [];
+      for (let i = 0; i < clean.length; i += 2) arr.push(parseInt(clean.slice(i, i + 2), 16));
+      return arr;
+    }
+    const bytes = new TextEncoder().encode(text);
+    return Array.from(bytes);
+  }
+
+  function runKeystreamParam(pwBytes, n, opts) {
+    const addBase = opts.addBase & 0xFFFF;
+    const rFlip = opts.r ? 1 : 0;
+    const aFlip = opts.a ? 0x8000 : 0;
+    const bFlip = opts.b ? 0x8000 : 0;
+    const dFlip = opts.d ? 1 : 0;
+    const e = pwBytes.slice(0, 77);
+    let R = 0xFFFFFFFF >>> 0;
+    let H = 0;
+    let S = 0xFFFF;
+    for (const c of e) {
+      R = ((R >>> 8) ^ T_REF[(R ^ c) & 0xFF]) >>> 0;
+      H = (H + (T_REF[c] >>> 16) + c) & 0xFFFF;
+      S ^= ((T_REF[c] & 0xFFFF) ^ c) & 0xFFFF;
+    }
+    const S_mod = (S ^ bFlip) & 0xFFFF;
+    const add_mod = (addBase ^ aFlip) & 0xFFFF;
+    const K2_init = (0xFFFF ^ ((opts.a ^ opts.b) ? 0x8000 : 0) ^ dFlip) & 0xFFFF;
+
+    let W = ((R & 0xFFFF) ^ rFlip) & 0xFFFF;
+    let M = rol16((R >>> 16) & 0xFFFF, 1);
+    let K2 = K2_init;
+    let Hr = H;
+    S = S_mod;
+    const out = [];
+    const steps = [];
+    for (let i = 0; i < n; i++) {
+      const W_in = W;
+      const W_add = (W + add_mod) & 0xFFFF;
+      const u = (W_add >>> 1) & 0xFF;
+      const t = T_REF[u];
+      S = (S + (t >>> 16)) & 0xFFFF;
+      M = (ror16(M, 2) ^ ror16(t & 0xFFFF, 1)) & 0xFFFF;
+      K2 ^= M;
+      Hr = ror16(Hr, 2);
+      W = (W_add ^ S ^ Hr ^ K2) & 0xFFFF;
+      const ob = (W >>> 8) & 0xFF;
+      out.push(ob);
+      steps.push({ i, W_in, W_add, u, S, M, K2, Hr, W, ob });
+    }
+    return {
+      init: { R, H, S0: S_mod, W0: (R ^ rFlip) & 0xFFFF, M0: rol16((R >>> 16) & 0xFFFF, 1), K2_0: K2_init, add_mod },
+      out,
+      steps
+    };
+  }
+
+  window.runTracer = function () {
+    const mode = document.getElementById("simMode").value;
+    const pwText = document.getElementById("simPw").value;
+    const n = Math.max(1, Math.min(64, parseInt(document.getElementById("simLen").value || "16", 10)));
+    let pwBytes;
+    try {
+      pwBytes = parseInput(mode, pwText);
+    } catch (err) {
+      document.getElementById("simHex").textContent = "Error: " + err.message;
+      return;
+    }
+    const res = runKeystreamParam(pwBytes, n, { addBase: 0x1234, r: 0, a: 0, b: 0, d: 0 });
+    document.getElementById("simInit").innerHTML = [
+      `<div class="kv-pill">len(e)=<code>${Math.min(pwBytes.length, 77)}</code></div>`,
+      `<div class="kv-pill">R=<code>${hex(res.init.R, 8)}</code></div>`,
+      `<div class="kv-pill">H=<code>${hex(res.init.H, 4)}</code></div>`,
+      `<div class="kv-pill">S0=<code>${hex(res.init.S0, 4)}</code></div>`,
+      `<div class="kv-pill">W0=<code>${hex(res.init.W0, 4)}</code></div>`,
+      `<div class="kv-pill">M0=<code>${hex(res.init.M0, 4)}</code></div>`,
+      `<div class="kv-pill">K2_0=<code>${hex(res.init.K2_0, 4)}</code></div>`
+    ].join("");
+    document.getElementById("simHex").textContent = res.out.map(b => b.toString(16).padStart(2, "0")).join("");
+    document.getElementById("simBody").innerHTML = res.steps.map(s =>
+      `<tr><td>${s.i}</td><td><code>${hex(s.W_in,4)}</code></td><td><code>${hex(s.W_add,4)}</code></td><td><code>${hex(s.u,2)}</code></td><td><code>${hex(s.S,4)}</code></td><td><code>${hex(s.M,4)}</code></td><td><code>${hex(s.K2,4)}</code></td><td><code>${hex(s.Hr,4)}</code></td><td><code>${hex(s.W,4)}</code></td><td><strong><code>${hex(s.ob,2)}</code></strong></td></tr>`
+    ).join("");
+  };
+
+  window.runGauge = function () {
+    const pwBytes = Array.from(new TextEncoder().encode(document.getElementById("gPw").value));
+    const addBase = document.getElementById("gParity").value === "odd" ? 0x1235 : 0x1234;
+    const r = document.getElementById("gR").checked ? 1 : 0;
+    const a = document.getElementById("gA").checked ? 1 : 0;
+    const b = document.getElementById("gB").checked ? 1 : 0;
+    const d = document.getElementById("gD").checked ? 1 : 0;
+    const base = runKeystreamParam(pwBytes, 32, { addBase, r: 0, a: 0, b: 0, d: 0 });
+    const test = runKeystreamParam(pwBytes, 32, { addBase, r, a, b, d });
+    let diffs = 0;
+    for (let i = 0; i < 32; i++) if (base.out[i] !== test.out[i]) diffs++;
+    const statusEl = document.getElementById("gaugeStatus");
+    if (diffs === 0) {
+      statusEl.className = "callout ok";
+      statusEl.innerHTML = `<strong>0 / 32 byte differences</strong> &mdash; Exact gauge equivalence holds for (r=${r}, a=${a}, b=${b}, d=${d}) under add_c=${hex(addBase,4)}!`;
+    } else {
+      statusEl.className = "callout warn";
+      statusEl.innerHTML = `<strong>${diffs} / 32 byte differences</strong> &mdash; Parity collapse triggered! Odd add_c=${hex(addBase,4)} couples bit-0 flips (r=${r}, d=${d}) into (W + add_c) &gt;&gt; 1.`;
+    }
+    document.getElementById("gBaseHex").textContent = base.out.map(x => x.toString(16).padStart(2, "0")).join("");
+    document.getElementById("gParams").textContent = `add_c=${hex(test.init.add_mod,4)}, K2_0=${hex(test.init.K2_0,4)}, R_lsb=${test.init.W0 & 1}, S0_msb=${(test.init.S0 & 0x8000) ? 1 : 0}`;
+    document.getElementById("gTestHex").textContent = test.out.map(x => x.toString(16).padStart(2, "0")).join("");
+  };
+
+  window.addEventListener("DOMContentLoaded", function () {
+    window.runTracer();
+    window.runGauge();
+  });
+})();
+</script>
+</body>
+</html>

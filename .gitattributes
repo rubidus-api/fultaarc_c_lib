@@ -1,0 +1,2 @@
+# Vendored upstream files stay byte-identical (CRLF, trailing blanks): no whitespace rules for them.
+vendor/** -whitespace

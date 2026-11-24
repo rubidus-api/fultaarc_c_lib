@@ -1,0 +1,23 @@
+# cpio.txt - cpio fixtures (newc/crc/odc/old-binary) made by tests/tools/cpioenc.py and VALIDATED BY `7z x`
+# (an independent cpio reader) before commit; see docs/research/formats/cpio.md and T020.
+# archive|entry|size|crc32
+newc.cpio|hello.txt|11|01043403
+newc.cpio|data/nums.bin|4000|bb16f1df
+newc.cpio|data/empty|0|00000000
+newc.cpio|big.bin|70000|37accebd
+crc.cpio|hello.txt|11|01043403
+crc.cpio|data/nums.bin|4000|bb16f1df
+crc.cpio|data/empty|0|00000000
+crc.cpio|big.bin|70000|37accebd
+odc.cpio|hello.txt|11|01043403
+odc.cpio|data/nums.bin|4000|bb16f1df
+odc.cpio|data/empty|0|00000000
+odc.cpio|big.bin|70000|37accebd
+binle.cpio|hello.txt|11|01043403
+binle.cpio|data/nums.bin|4000|bb16f1df
+binle.cpio|data/empty|0|00000000
+binle.cpio|big.bin|70000|37accebd
+binbe.cpio|hello.txt|11|01043403
+binbe.cpio|data/nums.bin|4000|bb16f1df
+binbe.cpio|data/empty|0|00000000
+binbe.cpio|big.bin|70000|37accebd

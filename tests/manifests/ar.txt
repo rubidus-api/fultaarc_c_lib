@@ -1,0 +1,10 @@
+# ar.txt - GNU ar fixtures (short names + GNU // long-name table). size+CRC-32 per member. See T019.
+# archive|entry|size|crc32
+gnu.a|a.o|180|d8634d03
+gnu.a|bee.o|1234|695cca9c
+gnu.a|a_rather_long_member_name_over_15.o|900|14e5ef7f
+gnu.a|another_long_filename_too.txt|112|27a99400
+gnu.a|e.o|0|00000000
+short.a|a.o|180|d8634d03
+short.a|bee.o|1234|695cca9c
+short.a|e.o|0|00000000

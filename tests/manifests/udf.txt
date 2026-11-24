@@ -1,0 +1,12 @@
+# udf.txt - UDF (ECMA-167 / OSTA UDF) fixtures made by tests/tools/udfmake.py and VALIDATED BY `7z x`/`7z l` (an
+# independent UDF reader) before commit; see docs/research/formats/udf.md and T023. The listing is exact and file
+# content (size+crc32) is 7z-validated end to end. There is no UDF image tool on this host, so udfmake.py builds the
+# image by hand from ECMA-167; it is trustworthy because (a) 7z lists+extracts it and (b) every descriptor carries
+# the self-verifying tag checksum + CRC-ITU that the reader independently re-validates (and rejects on mismatch).
+# basic.udf: ascii names, a subdirectory, a 5000-byte (3-block) file. uni.udf: a 16-bit OSTA CS0 (UCS-2) name.
+# archive|entry|size|crc32
+basic.udf|hello.txt|10|0432ff9a
+basic.udf|data.bin|5000|d7c1a8b6
+basic.udf|subdir/inner.txt|20|66adda1f
+uni.udf|héllo.txt|17|f4581251
+uni.udf|ascii.txt|12|86cd4792

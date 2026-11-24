@@ -1,0 +1,26 @@
+# tar.txt - GNU tar fixtures (ustar/gnu/pax/v7), round-trip size+CRC-32. See docs/research/formats/tar.md
+# archive|entry|size|crc32
+# v7.tar
+v7.tar|hello.txt|12|af38d936
+v7.tar|empty.txt|0|00000000
+v7.tar|data/nums.bin|5000|8f6085f2
+# ustar.tar
+ustar.tar|hello.txt|12|af38d936
+ustar.tar|empty.txt|0|00000000
+ustar.tar|data/nums.bin|5000|8f6085f2
+ustar.tar|data/zeros.bin|3000|da865b0d
+ustar.tar|data/big.bin|600000|6c43193f
+# gnu.tar
+gnu.tar|hello.txt|12|af38d936
+gnu.tar|empty.txt|0|00000000
+gnu.tar|data/nums.bin|5000|8f6085f2
+gnu.tar|data/zeros.bin|3000|da865b0d
+gnu.tar|data/big.bin|600000|6c43193f
+gnu.tar|deeply/nested/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb/leaf.txt|180|981e431d
+# pax.tar
+pax.tar|hello.txt|12|af38d936
+pax.tar|empty.txt|0|00000000
+pax.tar|data/nums.bin|5000|8f6085f2
+pax.tar|data/zeros.bin|3000|da865b0d
+pax.tar|data/big.bin|600000|6c43193f
+pax.tar|deeply/nested/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb/leaf.txt|180|981e431d

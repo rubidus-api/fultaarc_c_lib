@@ -1,0 +1,260 @@
+/* rar_glue.c - FultaArc: the RAR reader (rar.c, codec/) behind FultaArc's API. MIT.
+ *
+ * rar.c and codec/ are the rar-decoder clean room's MIT code from Rubraview (written from docs/specs/rar.md Part A
+ * without access to UnRAR or to the spec's sources), ported by renaming only (D-006). This file connects them:
+ * volumes found by name and mapped, the password callback, names in a code page, entries, extraction into sinks.
+ * Archives of RAR 1.4 / 1.5 alone are read by rar15_glue.c, which hands every other RAR archive here; a RAR 1.5
+ * entry in an archive that mixes it with later ones is still reported unsupported (D-029). */
+#include "../core/internal.h"
+#include "core/fa_once.h"
+
+#include "rar.h"
+#include "rarcodec.h"
+
+#include <stdio.h>
+
+typedef struct rar_glue {
+    proven_allocator_t alloc;   /* the archive's: the glue, its volume views and copies */
+    proven_arena_t arena;
+    void *backing;
+    fa_view_t *views;
+    fa_rar_volume_t *vols;
+    size_t nvol, cap_views, cap_vols;
+    fa_rar_archive_t ar;
+    bool open;
+    size_t *map;              /* FultaArc entry index -> rar.c entry index */
+    bool broken;              /* a solid run's stream broke (CORRUPT/TRUNCATED) at entry broken_at of group */
+    size_t broken_at;
+    uint32_t broken_group;
+} rar_glue_t;
+
+static bool rar_probe(const uint8_t *h, size_t n, uint64_t *off) {
+    *off = 0;
+    return n >= 7 && memcmp(h, "Rar!\x1a\x07", 6) == 0 && (h[6] == 0 || (h[6] == 1 && n >= 8 && h[7] == 0));
+}
+
+static fulta_arc_err_t map_err(fa_rar_err_t e) {
+    switch (e) {
+    case FA_RAR_OK: return FULTA_ARC_OK;
+    case FA_RAR_ERR_NOT_A_RAR: return FULTA_ARC_ERR_NOT_ARCHIVE;
+    case FA_RAR_ERR_CORRUPT: return FULTA_ARC_ERR_CORRUPT;
+    case FA_RAR_ERR_CORRUPT_STREAM: return FULTA_ARC_ERR_CHECKSUM;
+    case FA_RAR_ERR_ENCRYPTED: return FULTA_ARC_ERR_PASSWORD_NEEDED;
+    case FA_RAR_ERR_UNSUPPORTED: return FULTA_ARC_ERR_UNSUPPORTED;
+    case FA_RAR_ERR_TOO_LARGE: return FULTA_ARC_ERR_LIMIT;
+    case FA_RAR_ERR_OUT_OF_MEMORY: return FULTA_ARC_ERR_NOMEM;
+    case FA_RAR_ERR_BAD_INDEX: return FULTA_ARC_ERR_INVALID_ARG;
+    case FA_RAR_ERR_CANCELLED: return FULTA_ARC_ERR_CANCELLED;
+    case FA_RAR_ERR_BAD_PASSWORD: return FULTA_ARC_ERR_PASSWORD_WRONG;
+    case FA_RAR_ERR_MISSING_VOLUME: return FULTA_ARC_ERR_VOLUME_MISSING;
+    case FA_RAR_ERR_NO_CODEC: return FULTA_ARC_ERR_UNSUPPORTED;
+    }
+    return FULTA_ARC_ERR_CORRUPT;
+}
+
+static fulta_arc_err_t add_volume(rar_glue_t *g, const fulta_arc_source_t *src) {
+    if (g->nvol == g->cap_views) {
+        size_t nc = g->cap_views ? g->cap_views * 2 : 4;
+        fa_view_t *v = fa_resize(g->alloc, g->views, g->cap_views * sizeof *v, nc * sizeof *v);
+        if (!v) return FULTA_ARC_ERR_NOMEM;
+        g->views = v;
+        g->cap_views = nc;
+    }
+    if (g->nvol == g->cap_vols) {
+        size_t nc = g->cap_vols ? g->cap_vols * 2 : 4;
+        fa_rar_volume_t *rv = fa_resize(g->alloc, g->vols, g->cap_vols * sizeof *rv, nc * sizeof *rv);
+        if (!rv) return FULTA_ARC_ERR_NOMEM;
+        g->vols = rv;
+        g->cap_vols = nc;
+    }
+    fulta_arc_err_t e = fa_view_open(g->alloc, src, &g->views[g->nvol]);
+    if (e) return e;
+    g->vols[g->nvol] = (fa_rar_volume_t){g->views[g->nvol].bytes.ptr, g->views[g->nvol].bytes.size};
+    g->nvol++;
+    return FULTA_ARC_OK;
+}
+
+/* Find the volumes after the first by name (spec 4.1: name.partN.rar, or name.rar, .r00, .r01, ...). */
+static fulta_arc_err_t collect_volumes(fulta_arc_t *arc, rar_glue_t *g) {
+    fa_rar_volume_info_t info;
+    if (!fa_rar_volume_info(g->vols[0].data, g->vols[0].size, &info) || !arc->opt.name) return FULTA_ARC_OK;
+    proven_u8str_view_t name = proven_u8str_view_from_cstr(arc->opt.name);
+    fa_rar_volume_name_kind_t kind = fa_rar_volume_name_kind(name);
+    if (!info.is_volume && !info.headers_encrypted && kind == FA_RAR_NAME_PLAIN) return FULTA_ARC_OK;
+    bool old = !info.new_numbering && kind != FA_RAR_NAME_PART;
+    proven_u8str_view_t cur = name;
+    for (uint32_t k = 1; k < 100000; k++) {
+        proven_u8str_view_t next = fa_rar_next_volume(&g->arena, cur, old);
+        if (!next.ptr || !next.size) break;
+        char *path = fa_strndup_a(arc->alloc, (const char *)next.ptr, next.size);
+        if (!path) return FULTA_ARC_ERR_NOMEM;
+        const fulta_arc_source_t *src;
+        fulta_arc_err_t e = fa_volume(arc, k, path, &src);
+        fa_release(arc->alloc, path);
+        if (e == FULTA_ARC_ERR_VOLUME_MISSING) break;
+        if (e) return e;
+        if ((e = add_volume(g, src))) return e;
+        cur = next;
+    }
+    return FULTA_ARC_OK;
+}
+
+static fulta_arc_err_t make_arena(rar_glue_t *g, size_t size) {
+    fa_release(g->alloc, g->backing);
+    g->backing = fa_alloc(g->alloc, size);
+    if (!g->backing) return FULTA_ARC_ERR_NOMEM;
+    g->arena = proven_arena_create((proven_mem_mut_t){.ptr = g->backing, .size = size});
+    return FULTA_ARC_OK;
+}
+
+static fa_once_t codec_once;
+static void codec_init(void) { fa_rar_set_codec(fa_rarcodec()); }
+
+static fulta_arc_err_t rar_open(fulta_arc_t *arc, uint64_t search) {
+    (void)search;   /* rar.c finds a signature after an SFX stub itself */
+    rar_glue_t *g = fa_zalloc(arc->alloc, 1, sizeof *g);
+    if (!g) return FULTA_ARC_ERR_NOMEM;
+    g->alloc = arc->alloc;
+    arc->state = g;
+    fa_once(&codec_once, codec_init);              /* the codec table, set once for every thread */
+    fulta_arc_err_t e = add_volume(g, arc->volumes[0]);
+    if (e) return e;
+    if (search == UINT64_MAX && !fa_rar_is_rar(g->vols[0].data, g->vols[0].size)) return FULTA_ARC_ERR_NOT_ARCHIVE;
+    size_t arena_size = (size_t)1 << 20;
+    if ((e = make_arena(g, arena_size))) return e;
+    if ((e = collect_volumes(arc, g))) return e;
+    /* headers: plain, or encrypted (ask for the password) */
+    for (uint32_t attempt = 0;;) {
+        const char *pw = "";
+        if (attempt > 0) {
+            e = fa_password(arc, attempt - 1, &pw);
+            if (e) return attempt > 1 ? FULTA_ARC_ERR_PASSWORD_WRONG : e;
+        }
+        proven_arena_reset(&g->arena);
+        fa_rar_result_t r = fa_rar_open_volumes(g->alloc, &g->arena, g->vols, g->nvol, proven_u8str_view_from_cstr(pw));
+        if (r.err == FA_RAR_ERR_OUT_OF_MEMORY && arena_size < ((size_t)1 << 30)) {
+            if (arc->opt.max_memory && arena_size * 4 > arc->opt.max_memory) return FULTA_ARC_ERR_LIMIT;
+            arena_size *= 4;
+            if ((e = make_arena(g, arena_size))) return e;
+            continue;
+        }
+        if (r.err == FA_RAR_ERR_ENCRYPTED || r.err == FA_RAR_ERR_BAD_PASSWORD) {
+            attempt++;
+            if (attempt > 64) return FULTA_ARC_ERR_PASSWORD_WRONG;
+            continue;
+        }
+        if (r.err) return map_err(r.err);
+        g->ar = r.value;
+        g->open = true;
+        if (*pw) fa_password_ok(arc, pw);
+        break;
+    }
+    g->map = fa_zalloc(arc->alloc, g->ar.entry_count ? g->ar.entry_count : 1, sizeof *g->map);
+    if (!g->map) return FULTA_ARC_ERR_NOMEM;
+    uint32_t rar_group = 0;   /* solid-group counter (API: per-entry solid_group) */
+    for (size_t i = 0; i < g->ar.entry_count; i++) {
+        const fa_rar_entry_t *re = &g->ar.entries[i];
+        bool name_nu = false;
+        char *uname = re->name_is_legacy
+                          ? fa_decode_name(arc, fa_bytes(re->name.ptr, re->name.size), false, FULTA_ARC_CP_437, &name_nu)
+                          : fa_strndup_a(arc->alloc, (const char *)re->name.ptr, re->name.size);
+        if (!uname) return FULTA_ARC_ERR_NOMEM;
+        char method[32];
+        if (re->method == 0) snprintf(method, sizeof method, "Store");
+        else snprintf(method, sizeof method, "RAR%u.%u", re->method / 10, re->method % 10);
+        fa_entry_t *en = fa_add_entry(arc, fa_bytes(re->name.ptr, re->name.size), uname, method);
+        fa_release(arc->alloc, uname);
+        if (!en) return FULTA_ARC_ERR_NOMEM;
+        en->pub.size = re->size == FA_RAR_SIZE_UNKNOWN ? 0 : re->size;
+        en->pub.packed_size = re->packed_size;
+        if (re->size == FA_RAR_SIZE_UNKNOWN) en->pub.flags |= FULTA_ARC_ENTRY_UNKNOWN_SIZE;
+        if (re->has_crc && !re->hash_mac && re->piece_count) { en->pub.crc32 = re->crc32; en->pub.flags |= FULTA_ARC_ENTRY_HAS_CRC32; }
+        if (re->encrypted) en->pub.flags |= FULTA_ARC_ENTRY_ENCRYPTED;
+        if (re->has_mtime && re->mtime_dos) {   /* RAR 2-4: a DOS time, the local wall clock */
+            en->pub.mtime = fa_dos_time_ns((uint16_t)(re->dos_time >> 16), (uint16_t)re->dos_time) + re->mtime_ns;
+            en->pub.flags |= FULTA_ARC_ENTRY_HAS_MTIME | FULTA_ARC_ENTRY_MTIME_LOCAL;
+        } else if (re->has_mtime) {             /* RAR 5: UTC */
+            en->pub.mtime = re->mtime_ns;
+            en->pub.flags |= FULTA_ARC_ENTRY_HAS_MTIME;
+        }
+        if (re->solid) en->pub.flags |= FULTA_ARC_ENTRY_SOLID;
+        else rar_group++;   /* a non-solid entry starts a new solid group */
+        en->pub.solid_group = rar_group;
+        if (name_nu) en->pub.flags |= FULTA_ARC_ENTRY_NAME_NOT_UNICODE;
+        if (re->piece_count > 1) en->pub.flags |= FULTA_ARC_ENTRY_SPLIT;
+        if (re->method == 15 || re->method == 255 || re->crypt == FA_RAR_CRYPT_OLD || re->split)
+            en->pub.flags |= FULTA_ARC_ENTRY_UNSUPPORTED;
+        g->map[arc->count - 1] = i;
+    }
+    return FULTA_ARC_OK;
+}
+
+typedef struct sink_ctx { const fulta_arc_sink_t *sink; fulta_arc_err_t err; const fulta_arc_t *arc; } sink_ctx_t;
+
+static bool rar_write(void *ctx, const uint8_t *data, size_t size) {
+    sink_ctx_t *s = ctx;
+    if (fa_cancelled(s->arc)) { s->err = FULTA_ARC_ERR_CANCELLED; return false; }
+    if (!s->sink) return true;
+    s->err = s->sink->write(s->sink->ctx, data, size);
+    return s->err == FULTA_ARC_OK;
+}
+
+static fulta_arc_err_t rar_extract(fulta_arc_t *arc, size_t index, const fulta_arc_sink_t *sink) {
+    rar_glue_t *g = arc->state;
+    size_t ri = g->map[index];
+    if (arc->entries[index].pub.flags & FULTA_ARC_ENTRY_UNSUPPORTED) {
+        const fa_rar_entry_t *re = &g->ar.entries[ri];
+        return re->split ? FULTA_ARC_ERR_VOLUME_MISSING : FULTA_ARC_ERR_UNSUPPORTED;
+    }
+    if (fa_rar_needs_password(&g->ar)) {
+        for (uint32_t attempt = 0;; attempt++) {
+            const char *pw;
+            fulta_arc_err_t e = fa_password(arc, attempt, &pw);
+            if (e) return attempt ? FULTA_ARC_ERR_PASSWORD_WRONG : e;
+            fa_rar_err_t r = fa_rar_set_password(&g->ar, proven_u8str_view_from_cstr(pw));
+            if (r == FA_RAR_OK) { fa_password_ok(arc, pw); break; }
+            if (r != FA_RAR_ERR_BAD_PASSWORD) return map_err(r);
+            if (attempt > 64) return FULTA_ARC_ERR_PASSWORD_WRONG;
+        }
+    }
+    /* options.max_dictionary (and max_memory) bound the window this entry and the earlier entries of its solid run
+       will allocate: the dictionary size is the archive's word, up to 64 GiB for RAR 7. */
+    for (size_t j = ri + 1; j-- > 0;) {
+        const fa_rar_entry_t *re = &g->ar.entries[j];
+        if (re->method != 0 && (re->dict_size > arc->limits.max_dictionary ||
+                                (arc->opt.max_memory && re->dict_size > arc->opt.max_memory)))
+            return FULTA_ARC_ERR_LIMIT;
+        if (!re->solid) break;
+    }
+    /* A later entry of a solid run whose stream broke earlier cannot decode either (it continues that stream):
+       fail it at once instead of decoding the run again up to the break (quadratic over a damaged run, D-041). */
+    const fulta_arc_entry_t *pe = &arc->entries[index].pub;
+    if (g->broken && (pe->flags & FULTA_ARC_ENTRY_SOLID) && pe->solid_group == g->broken_group && index > g->broken_at)
+        return FULTA_ARC_ERR_CORRUPT;
+    sink_ctx_t sc = {sink, FULTA_ARC_OK, arc};
+    fa_rar_err_t r = fa_rar_extract(&g->ar, ri, rar_write, &sc);
+    if (sc.err) return sc.err;
+    fulta_arc_err_t e = map_err(r);
+    if ((e == FULTA_ARC_ERR_CORRUPT || e == FULTA_ARC_ERR_TRUNCATED) && !(pe->flags & FULTA_ARC_ENTRY_ENCRYPTED) &&
+        (!g->broken || pe->solid_group != g->broken_group || index < g->broken_at)) {
+        g->broken = true;                         /* not for encrypted runs: a wrong password looks like damage */
+        g->broken_at = index;
+        g->broken_group = pe->solid_group;
+    }
+    return e;
+}
+
+static void rar_close(fulta_arc_t *arc) {
+    rar_glue_t *g = arc->state;
+    if (!g) return;
+    if (g->open) fa_rar_close(&g->ar);
+    for (size_t i = 0; i < g->nvol; i++) fa_view_close(&g->views[i]);
+    fa_release(arc->alloc, g->views);
+    fa_release(arc->alloc, g->vols);
+    fa_release(arc->alloc, g->map);
+    fa_release(arc->alloc, g->backing);
+    fa_release(arc->alloc, g);
+    arc->state = NULL;
+}
+
+const fa_format_ops_t fa_rar_ops = {FULTA_ARC_FORMAT_RAR, rar_probe, rar_open, rar_extract, rar_close, NULL, NULL};

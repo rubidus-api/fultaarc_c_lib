@@ -1,0 +1,417 @@
+# archive|entry|size|crc32 - written by tests/generators/make_zip7z.py from its own inputs
+7z_aes.7z|code.bin|120000|9d3adc33
+7z_aes.7z|empty.txt|0|00000000
+7z_aes.7z|far.bin|90000|19cfd81d
+7z_aes.7z|one.txt|1|8cdc1683
+7z_aes.7z|random.bin|70000|2c9ffccf
+7z_aes.7z|sub/deep/nested.txt|700|098db714
+7z_aes.7z|text.txt|388938|7f2aa5cd
+7z_aes.7z|zeros.bin|300000|f6b2e2fb
+7z_aes.7z|한글 이름.txt|1200|47d82f6b
+7z_aes_hdr.7z|code.bin|120000|9d3adc33
+7z_aes_hdr.7z|empty.txt|0|00000000
+7z_aes_hdr.7z|far.bin|90000|19cfd81d
+7z_aes_hdr.7z|one.txt|1|8cdc1683
+7z_aes_hdr.7z|random.bin|70000|2c9ffccf
+7z_aes_hdr.7z|sub/deep/nested.txt|700|098db714
+7z_aes_hdr.7z|text.txt|388938|7f2aa5cd
+7z_aes_hdr.7z|zeros.bin|300000|f6b2e2fb
+7z_aes_hdr.7z|한글 이름.txt|1200|47d82f6b
+7z_arm.7z|code.bin|120000|9d3adc33
+7z_arm.7z|empty.txt|0|00000000
+7z_arm.7z|far.bin|90000|19cfd81d
+7z_arm.7z|one.txt|1|8cdc1683
+7z_arm.7z|random.bin|70000|2c9ffccf
+7z_arm.7z|sub/deep/nested.txt|700|098db714
+7z_arm.7z|text.txt|388938|7f2aa5cd
+7z_arm.7z|zeros.bin|300000|f6b2e2fb
+7z_arm.7z|한글 이름.txt|1200|47d82f6b
+7z_arm64.7z|code.bin|120000|9d3adc33
+7z_arm64.7z|empty.txt|0|00000000
+7z_arm64.7z|far.bin|90000|19cfd81d
+7z_arm64.7z|one.txt|1|8cdc1683
+7z_arm64.7z|random.bin|70000|2c9ffccf
+7z_arm64.7z|sub/deep/nested.txt|700|098db714
+7z_arm64.7z|text.txt|388938|7f2aa5cd
+7z_arm64.7z|zeros.bin|300000|f6b2e2fb
+7z_arm64.7z|한글 이름.txt|1200|47d82f6b
+7z_armt.7z|code.bin|120000|9d3adc33
+7z_armt.7z|empty.txt|0|00000000
+7z_armt.7z|far.bin|90000|19cfd81d
+7z_armt.7z|one.txt|1|8cdc1683
+7z_armt.7z|random.bin|70000|2c9ffccf
+7z_armt.7z|sub/deep/nested.txt|700|098db714
+7z_armt.7z|text.txt|388938|7f2aa5cd
+7z_armt.7z|zeros.bin|300000|f6b2e2fb
+7z_armt.7z|한글 이름.txt|1200|47d82f6b
+7z_bcj.7z|code.bin|120000|9d3adc33
+7z_bcj.7z|empty.txt|0|00000000
+7z_bcj.7z|far.bin|90000|19cfd81d
+7z_bcj.7z|one.txt|1|8cdc1683
+7z_bcj.7z|random.bin|70000|2c9ffccf
+7z_bcj.7z|sub/deep/nested.txt|700|098db714
+7z_bcj.7z|text.txt|388938|7f2aa5cd
+7z_bcj.7z|zeros.bin|300000|f6b2e2fb
+7z_bcj.7z|한글 이름.txt|1200|47d82f6b
+7z_bcj2.7z|code.bin|120000|9d3adc33
+7z_bcj2.7z|empty.txt|0|00000000
+7z_bcj2.7z|far.bin|90000|19cfd81d
+7z_bcj2.7z|one.txt|1|8cdc1683
+7z_bcj2.7z|random.bin|70000|2c9ffccf
+7z_bcj2.7z|sub/deep/nested.txt|700|098db714
+7z_bcj2.7z|text.txt|388938|7f2aa5cd
+7z_bcj2.7z|zeros.bin|300000|f6b2e2fb
+7z_bcj2.7z|한글 이름.txt|1200|47d82f6b
+7z_bzip2.7z|code.bin|120000|9d3adc33
+7z_bzip2.7z|empty.txt|0|00000000
+7z_bzip2.7z|far.bin|90000|19cfd81d
+7z_bzip2.7z|one.txt|1|8cdc1683
+7z_bzip2.7z|random.bin|70000|2c9ffccf
+7z_bzip2.7z|sub/deep/nested.txt|700|098db714
+7z_bzip2.7z|text.txt|388938|7f2aa5cd
+7z_bzip2.7z|zeros.bin|300000|f6b2e2fb
+7z_bzip2.7z|한글 이름.txt|1200|47d82f6b
+7z_copy.7z|code.bin|120000|9d3adc33
+7z_copy.7z|empty.txt|0|00000000
+7z_copy.7z|far.bin|90000|19cfd81d
+7z_copy.7z|one.txt|1|8cdc1683
+7z_copy.7z|random.bin|70000|2c9ffccf
+7z_copy.7z|sub/deep/nested.txt|700|098db714
+7z_copy.7z|text.txt|388938|7f2aa5cd
+7z_copy.7z|zeros.bin|300000|f6b2e2fb
+7z_copy.7z|한글 이름.txt|1200|47d82f6b
+7z_default.7z|code.bin|120000|9d3adc33
+7z_default.7z|empty.txt|0|00000000
+7z_default.7z|far.bin|90000|19cfd81d
+7z_default.7z|one.txt|1|8cdc1683
+7z_default.7z|random.bin|70000|2c9ffccf
+7z_default.7z|sub/deep/nested.txt|700|098db714
+7z_default.7z|text.txt|388938|7f2aa5cd
+7z_default.7z|zeros.bin|300000|f6b2e2fb
+7z_default.7z|한글 이름.txt|1200|47d82f6b
+7z_deflate.7z|code.bin|120000|9d3adc33
+7z_deflate.7z|empty.txt|0|00000000
+7z_deflate.7z|far.bin|90000|19cfd81d
+7z_deflate.7z|one.txt|1|8cdc1683
+7z_deflate.7z|random.bin|70000|2c9ffccf
+7z_deflate.7z|sub/deep/nested.txt|700|098db714
+7z_deflate.7z|text.txt|388938|7f2aa5cd
+7z_deflate.7z|zeros.bin|300000|f6b2e2fb
+7z_deflate.7z|한글 이름.txt|1200|47d82f6b
+7z_deflate64.7z|code.bin|120000|9d3adc33
+7z_deflate64.7z|empty.txt|0|00000000
+7z_deflate64.7z|far.bin|90000|19cfd81d
+7z_deflate64.7z|one.txt|1|8cdc1683
+7z_deflate64.7z|random.bin|70000|2c9ffccf
+7z_deflate64.7z|sub/deep/nested.txt|700|098db714
+7z_deflate64.7z|text.txt|388938|7f2aa5cd
+7z_deflate64.7z|zeros.bin|300000|f6b2e2fb
+7z_deflate64.7z|한글 이름.txt|1200|47d82f6b
+7z_delta.7z|code.bin|120000|9d3adc33
+7z_delta.7z|empty.txt|0|00000000
+7z_delta.7z|far.bin|90000|19cfd81d
+7z_delta.7z|one.txt|1|8cdc1683
+7z_delta.7z|random.bin|70000|2c9ffccf
+7z_delta.7z|sub/deep/nested.txt|700|098db714
+7z_delta.7z|text.txt|388938|7f2aa5cd
+7z_delta.7z|zeros.bin|300000|f6b2e2fb
+7z_delta.7z|한글 이름.txt|1200|47d82f6b
+7z_ia64.7z|code.bin|120000|9d3adc33
+7z_ia64.7z|empty.txt|0|00000000
+7z_ia64.7z|far.bin|90000|19cfd81d
+7z_ia64.7z|one.txt|1|8cdc1683
+7z_ia64.7z|random.bin|70000|2c9ffccf
+7z_ia64.7z|sub/deep/nested.txt|700|098db714
+7z_ia64.7z|text.txt|388938|7f2aa5cd
+7z_ia64.7z|zeros.bin|300000|f6b2e2fb
+7z_ia64.7z|한글 이름.txt|1200|47d82f6b
+7z_lzma.7z|code.bin|120000|9d3adc33
+7z_lzma.7z|empty.txt|0|00000000
+7z_lzma.7z|far.bin|90000|19cfd81d
+7z_lzma.7z|one.txt|1|8cdc1683
+7z_lzma.7z|random.bin|70000|2c9ffccf
+7z_lzma.7z|sub/deep/nested.txt|700|098db714
+7z_lzma.7z|text.txt|388938|7f2aa5cd
+7z_lzma.7z|zeros.bin|300000|f6b2e2fb
+7z_lzma.7z|한글 이름.txt|1200|47d82f6b
+7z_lzma2.7z|code.bin|120000|9d3adc33
+7z_lzma2.7z|empty.txt|0|00000000
+7z_lzma2.7z|far.bin|90000|19cfd81d
+7z_lzma2.7z|one.txt|1|8cdc1683
+7z_lzma2.7z|random.bin|70000|2c9ffccf
+7z_lzma2.7z|sub/deep/nested.txt|700|098db714
+7z_lzma2.7z|text.txt|388938|7f2aa5cd
+7z_lzma2.7z|zeros.bin|300000|f6b2e2fb
+7z_lzma2.7z|한글 이름.txt|1200|47d82f6b
+7z_lzma2_lc4.7z|code.bin|120000|9d3adc33
+7z_lzma2_lc4.7z|empty.txt|0|00000000
+7z_lzma2_lc4.7z|far.bin|90000|19cfd81d
+7z_lzma2_lc4.7z|one.txt|1|8cdc1683
+7z_lzma2_lc4.7z|random.bin|70000|2c9ffccf
+7z_lzma2_lc4.7z|sub/deep/nested.txt|700|098db714
+7z_lzma2_lc4.7z|text.txt|388938|7f2aa5cd
+7z_lzma2_lc4.7z|zeros.bin|300000|f6b2e2fb
+7z_lzma2_lc4.7z|한글 이름.txt|1200|47d82f6b
+7z_lzma_eos.7z|code.bin|120000|9d3adc33
+7z_lzma_eos.7z|empty.txt|0|00000000
+7z_lzma_eos.7z|far.bin|90000|19cfd81d
+7z_lzma_eos.7z|one.txt|1|8cdc1683
+7z_lzma_eos.7z|random.bin|70000|2c9ffccf
+7z_lzma_eos.7z|sub/deep/nested.txt|700|098db714
+7z_lzma_eos.7z|text.txt|388938|7f2aa5cd
+7z_lzma_eos.7z|zeros.bin|300000|f6b2e2fb
+7z_lzma_eos.7z|한글 이름.txt|1200|47d82f6b
+7z_nonsolid.7z|code.bin|120000|9d3adc33
+7z_nonsolid.7z|empty.txt|0|00000000
+7z_nonsolid.7z|far.bin|90000|19cfd81d
+7z_nonsolid.7z|one.txt|1|8cdc1683
+7z_nonsolid.7z|random.bin|70000|2c9ffccf
+7z_nonsolid.7z|sub/deep/nested.txt|700|098db714
+7z_nonsolid.7z|text.txt|388938|7f2aa5cd
+7z_nonsolid.7z|zeros.bin|300000|f6b2e2fb
+7z_nonsolid.7z|한글 이름.txt|1200|47d82f6b
+7z_plainheader.7z|code.bin|120000|9d3adc33
+7z_plainheader.7z|empty.txt|0|00000000
+7z_plainheader.7z|far.bin|90000|19cfd81d
+7z_plainheader.7z|one.txt|1|8cdc1683
+7z_plainheader.7z|random.bin|70000|2c9ffccf
+7z_plainheader.7z|sub/deep/nested.txt|700|098db714
+7z_plainheader.7z|text.txt|388938|7f2aa5cd
+7z_plainheader.7z|zeros.bin|300000|f6b2e2fb
+7z_plainheader.7z|한글 이름.txt|1200|47d82f6b
+7z_ppc.7z|code.bin|120000|9d3adc33
+7z_ppc.7z|empty.txt|0|00000000
+7z_ppc.7z|far.bin|90000|19cfd81d
+7z_ppc.7z|one.txt|1|8cdc1683
+7z_ppc.7z|random.bin|70000|2c9ffccf
+7z_ppc.7z|sub/deep/nested.txt|700|098db714
+7z_ppc.7z|text.txt|388938|7f2aa5cd
+7z_ppc.7z|zeros.bin|300000|f6b2e2fb
+7z_ppc.7z|한글 이름.txt|1200|47d82f6b
+7z_ppmd.7z|code.bin|120000|9d3adc33
+7z_ppmd.7z|empty.txt|0|00000000
+7z_ppmd.7z|far.bin|90000|19cfd81d
+7z_ppmd.7z|one.txt|1|8cdc1683
+7z_ppmd.7z|random.bin|70000|2c9ffccf
+7z_ppmd.7z|sub/deep/nested.txt|700|098db714
+7z_ppmd.7z|text.txt|388938|7f2aa5cd
+7z_ppmd.7z|zeros.bin|300000|f6b2e2fb
+7z_ppmd.7z|한글 이름.txt|1200|47d82f6b
+7z_ppmd_o32.7z|code.bin|120000|9d3adc33
+7z_ppmd_o32.7z|empty.txt|0|00000000
+7z_ppmd_o32.7z|far.bin|90000|19cfd81d
+7z_ppmd_o32.7z|one.txt|1|8cdc1683
+7z_ppmd_o32.7z|random.bin|70000|2c9ffccf
+7z_ppmd_o32.7z|sub/deep/nested.txt|700|098db714
+7z_ppmd_o32.7z|text.txt|388938|7f2aa5cd
+7z_ppmd_o32.7z|zeros.bin|300000|f6b2e2fb
+7z_ppmd_o32.7z|한글 이름.txt|1200|47d82f6b
+7z_ppmd_small.7z|code.bin|120000|9d3adc33
+7z_ppmd_small.7z|empty.txt|0|00000000
+7z_ppmd_small.7z|far.bin|90000|19cfd81d
+7z_ppmd_small.7z|one.txt|1|8cdc1683
+7z_ppmd_small.7z|random.bin|70000|2c9ffccf
+7z_ppmd_small.7z|sub/deep/nested.txt|700|098db714
+7z_ppmd_small.7z|text.txt|388938|7f2aa5cd
+7z_ppmd_small.7z|zeros.bin|300000|f6b2e2fb
+7z_ppmd_small.7z|한글 이름.txt|1200|47d82f6b
+7z_riscv.7z|code.bin|120000|9d3adc33
+7z_riscv.7z|empty.txt|0|00000000
+7z_riscv.7z|far.bin|90000|19cfd81d
+7z_riscv.7z|one.txt|1|8cdc1683
+7z_riscv.7z|random.bin|70000|2c9ffccf
+7z_riscv.7z|sub/deep/nested.txt|700|098db714
+7z_riscv.7z|text.txt|388938|7f2aa5cd
+7z_riscv.7z|zeros.bin|300000|f6b2e2fb
+7z_riscv.7z|한글 이름.txt|1200|47d82f6b
+7z_sparc.7z|code.bin|120000|9d3adc33
+7z_sparc.7z|empty.txt|0|00000000
+7z_sparc.7z|far.bin|90000|19cfd81d
+7z_sparc.7z|one.txt|1|8cdc1683
+7z_sparc.7z|random.bin|70000|2c9ffccf
+7z_sparc.7z|sub/deep/nested.txt|700|098db714
+7z_sparc.7z|text.txt|388938|7f2aa5cd
+7z_sparc.7z|zeros.bin|300000|f6b2e2fb
+7z_sparc.7z|한글 이름.txt|1200|47d82f6b
+7z_swap4.7z|code.bin|120000|9d3adc33
+7z_swap4.7z|empty.txt|0|00000000
+7z_swap4.7z|far.bin|90000|19cfd81d
+7z_swap4.7z|one.txt|1|8cdc1683
+7z_swap4.7z|random.bin|70000|2c9ffccf
+7z_swap4.7z|sub/deep/nested.txt|700|098db714
+7z_swap4.7z|text.txt|388938|7f2aa5cd
+7z_swap4.7z|zeros.bin|300000|f6b2e2fb
+7z_swap4.7z|한글 이름.txt|1200|47d82f6b
+izip_bzip2.zip|code.bin|120000|9d3adc33
+izip_bzip2.zip|empty.txt|0|00000000
+izip_bzip2.zip|far.bin|90000|19cfd81d
+izip_bzip2.zip|one.txt|1|8cdc1683
+izip_bzip2.zip|random.bin|70000|2c9ffccf
+izip_bzip2.zip|sub/deep/nested.txt|700|098db714
+izip_bzip2.zip|text.txt|388938|7f2aa5cd
+izip_bzip2.zip|zeros.bin|300000|f6b2e2fb
+izip_bzip2.zip|한글 이름.txt|1200|47d82f6b
+izip_deflate.zip|code.bin|120000|9d3adc33
+izip_deflate.zip|empty.txt|0|00000000
+izip_deflate.zip|far.bin|90000|19cfd81d
+izip_deflate.zip|one.txt|1|8cdc1683
+izip_deflate.zip|random.bin|70000|2c9ffccf
+izip_deflate.zip|sub/deep/nested.txt|700|098db714
+izip_deflate.zip|text.txt|388938|7f2aa5cd
+izip_deflate.zip|zeros.bin|300000|f6b2e2fb
+izip_deflate.zip|한글 이름.txt|1200|47d82f6b
+izip_split.zip|code.bin|120000|9d3adc33
+izip_split.zip|empty.txt|0|00000000
+izip_split.zip|far.bin|90000|19cfd81d
+izip_split.zip|one.txt|1|8cdc1683
+izip_split.zip|random.bin|70000|2c9ffccf
+izip_split.zip|sub/deep/nested.txt|700|098db714
+izip_split.zip|text.txt|388938|7f2aa5cd
+izip_split.zip|zeros.bin|300000|f6b2e2fb
+izip_split.zip|한글 이름.txt|1200|47d82f6b
+izip_store.zip|code.bin|120000|9d3adc33
+izip_store.zip|empty.txt|0|00000000
+izip_store.zip|far.bin|90000|19cfd81d
+izip_store.zip|one.txt|1|8cdc1683
+izip_store.zip|random.bin|70000|2c9ffccf
+izip_store.zip|sub/deep/nested.txt|700|098db714
+izip_store.zip|text.txt|388938|7f2aa5cd
+izip_store.zip|zeros.bin|300000|f6b2e2fb
+izip_store.zip|한글 이름.txt|1200|47d82f6b
+izip_stream.zip|-|388938|7f2aa5cd
+izip_stream_crypt.zip|-|388938|7f2aa5cd
+izip_zipcrypto.zip|code.bin|120000|9d3adc33
+izip_zipcrypto.zip|empty.txt|0|00000000
+izip_zipcrypto.zip|far.bin|90000|19cfd81d
+izip_zipcrypto.zip|one.txt|1|8cdc1683
+izip_zipcrypto.zip|random.bin|70000|2c9ffccf
+izip_zipcrypto.zip|sub/deep/nested.txt|700|098db714
+izip_zipcrypto.zip|text.txt|388938|7f2aa5cd
+izip_zipcrypto.zip|zeros.bin|300000|f6b2e2fb
+izip_zipcrypto.zip|한글 이름.txt|1200|47d82f6b
+split.7z.001|code.bin|120000|9d3adc33
+split.7z.001|empty.txt|0|00000000
+split.7z.001|far.bin|90000|19cfd81d
+split.7z.001|one.txt|1|8cdc1683
+split.7z.001|random.bin|70000|2c9ffccf
+split.7z.001|sub/deep/nested.txt|700|098db714
+split.7z.001|text.txt|388938|7f2aa5cd
+split.7z.001|zeros.bin|300000|f6b2e2fb
+split.7z.001|한글 이름.txt|1200|47d82f6b
+zip_aes128.zip|code.bin|120000|9d3adc33
+zip_aes128.zip|empty.txt|0|00000000
+zip_aes128.zip|far.bin|90000|19cfd81d
+zip_aes128.zip|one.txt|1|8cdc1683
+zip_aes128.zip|random.bin|70000|2c9ffccf
+zip_aes128.zip|sub/deep/nested.txt|700|098db714
+zip_aes128.zip|text.txt|388938|7f2aa5cd
+zip_aes128.zip|zeros.bin|300000|f6b2e2fb
+zip_aes128.zip|한글 이름.txt|1200|47d82f6b
+zip_aes256.zip|code.bin|120000|9d3adc33
+zip_aes256.zip|empty.txt|0|00000000
+zip_aes256.zip|far.bin|90000|19cfd81d
+zip_aes256.zip|one.txt|1|8cdc1683
+zip_aes256.zip|random.bin|70000|2c9ffccf
+zip_aes256.zip|sub/deep/nested.txt|700|098db714
+zip_aes256.zip|text.txt|388938|7f2aa5cd
+zip_aes256.zip|zeros.bin|300000|f6b2e2fb
+zip_aes256.zip|한글 이름.txt|1200|47d82f6b
+zip_bzip2.zip|code.bin|120000|9d3adc33
+zip_bzip2.zip|empty.txt|0|00000000
+zip_bzip2.zip|far.bin|90000|19cfd81d
+zip_bzip2.zip|one.txt|1|8cdc1683
+zip_bzip2.zip|random.bin|70000|2c9ffccf
+zip_bzip2.zip|sub/deep/nested.txt|700|098db714
+zip_bzip2.zip|text.txt|388938|7f2aa5cd
+zip_bzip2.zip|zeros.bin|300000|f6b2e2fb
+zip_bzip2.zip|한글 이름.txt|1200|47d82f6b
+zip_deflate.zip|code.bin|120000|9d3adc33
+zip_deflate.zip|empty.txt|0|00000000
+zip_deflate.zip|far.bin|90000|19cfd81d
+zip_deflate.zip|one.txt|1|8cdc1683
+zip_deflate.zip|random.bin|70000|2c9ffccf
+zip_deflate.zip|sub/deep/nested.txt|700|098db714
+zip_deflate.zip|text.txt|388938|7f2aa5cd
+zip_deflate.zip|zeros.bin|300000|f6b2e2fb
+zip_deflate.zip|한글 이름.txt|1200|47d82f6b
+zip_deflate64.zip|code.bin|120000|9d3adc33
+zip_deflate64.zip|empty.txt|0|00000000
+zip_deflate64.zip|far.bin|90000|19cfd81d
+zip_deflate64.zip|one.txt|1|8cdc1683
+zip_deflate64.zip|random.bin|70000|2c9ffccf
+zip_deflate64.zip|sub/deep/nested.txt|700|098db714
+zip_deflate64.zip|text.txt|388938|7f2aa5cd
+zip_deflate64.zip|zeros.bin|300000|f6b2e2fb
+zip_deflate64.zip|한글 이름.txt|1200|47d82f6b
+zip_lzma.zip|code.bin|120000|9d3adc33
+zip_lzma.zip|empty.txt|0|00000000
+zip_lzma.zip|far.bin|90000|19cfd81d
+zip_lzma.zip|one.txt|1|8cdc1683
+zip_lzma.zip|random.bin|70000|2c9ffccf
+zip_lzma.zip|sub/deep/nested.txt|700|098db714
+zip_lzma.zip|text.txt|388938|7f2aa5cd
+zip_lzma.zip|zeros.bin|300000|f6b2e2fb
+zip_lzma.zip|한글 이름.txt|1200|47d82f6b
+zip_lzma_eos.zip|code.bin|120000|9d3adc33
+zip_lzma_eos.zip|empty.txt|0|00000000
+zip_lzma_eos.zip|far.bin|90000|19cfd81d
+zip_lzma_eos.zip|one.txt|1|8cdc1683
+zip_lzma_eos.zip|random.bin|70000|2c9ffccf
+zip_lzma_eos.zip|sub/deep/nested.txt|700|098db714
+zip_lzma_eos.zip|text.txt|388938|7f2aa5cd
+zip_lzma_eos.zip|zeros.bin|300000|f6b2e2fb
+zip_lzma_eos.zip|한글 이름.txt|1200|47d82f6b
+zip_ppmd.zip|code.bin|120000|9d3adc33
+zip_ppmd.zip|empty.txt|0|00000000
+zip_ppmd.zip|far.bin|90000|19cfd81d
+zip_ppmd.zip|one.txt|1|8cdc1683
+zip_ppmd.zip|random.bin|70000|2c9ffccf
+zip_ppmd.zip|sub/deep/nested.txt|700|098db714
+zip_ppmd.zip|text.txt|388938|7f2aa5cd
+zip_ppmd.zip|zeros.bin|300000|f6b2e2fb
+zip_ppmd.zip|한글 이름.txt|1200|47d82f6b
+zip_ppmd_o16.zip|code.bin|120000|9d3adc33
+zip_ppmd_o16.zip|empty.txt|0|00000000
+zip_ppmd_o16.zip|far.bin|90000|19cfd81d
+zip_ppmd_o16.zip|one.txt|1|8cdc1683
+zip_ppmd_o16.zip|random.bin|70000|2c9ffccf
+zip_ppmd_o16.zip|sub/deep/nested.txt|700|098db714
+zip_ppmd_o16.zip|text.txt|388938|7f2aa5cd
+zip_ppmd_o16.zip|zeros.bin|300000|f6b2e2fb
+zip_ppmd_o16.zip|한글 이름.txt|1200|47d82f6b
+zip_store.zip|code.bin|120000|9d3adc33
+zip_store.zip|empty.txt|0|00000000
+zip_store.zip|far.bin|90000|19cfd81d
+zip_store.zip|one.txt|1|8cdc1683
+zip_store.zip|random.bin|70000|2c9ffccf
+zip_store.zip|sub/deep/nested.txt|700|098db714
+zip_store.zip|text.txt|388938|7f2aa5cd
+zip_store.zip|zeros.bin|300000|f6b2e2fb
+zip_store.zip|한글 이름.txt|1200|47d82f6b
+zip_utf8.zip|code.bin|120000|9d3adc33
+zip_utf8.zip|empty.txt|0|00000000
+zip_utf8.zip|far.bin|90000|19cfd81d
+zip_utf8.zip|one.txt|1|8cdc1683
+zip_utf8.zip|random.bin|70000|2c9ffccf
+zip_utf8.zip|sub/deep/nested.txt|700|098db714
+zip_utf8.zip|text.txt|388938|7f2aa5cd
+zip_utf8.zip|zeros.bin|300000|f6b2e2fb
+zip_utf8.zip|한글 이름.txt|1200|47d82f6b
+zip_xz.zip|code.bin|120000|9d3adc33
+zip_xz.zip|empty.txt|0|00000000
+zip_xz.zip|far.bin|90000|19cfd81d
+zip_xz.zip|one.txt|1|8cdc1683
+zip_xz.zip|random.bin|70000|2c9ffccf
+zip_xz.zip|sub/deep/nested.txt|700|098db714
+zip_xz.zip|text.txt|388938|7f2aa5cd
+zip_xz.zip|zeros.bin|300000|f6b2e2fb
+zip_xz.zip|한글 이름.txt|1200|47d82f6b
+zip_zipcrypto7z.zip|code.bin|120000|9d3adc33
+zip_zipcrypto7z.zip|empty.txt|0|00000000
+zip_zipcrypto7z.zip|far.bin|90000|19cfd81d
+zip_zipcrypto7z.zip|one.txt|1|8cdc1683
+zip_zipcrypto7z.zip|random.bin|70000|2c9ffccf
+zip_zipcrypto7z.zip|sub/deep/nested.txt|700|098db714
+zip_zipcrypto7z.zip|text.txt|388938|7f2aa5cd
+zip_zipcrypto7z.zip|zeros.bin|300000|f6b2e2fb
+zip_zipcrypto7z.zip|한글 이름.txt|1200|47d82f6b

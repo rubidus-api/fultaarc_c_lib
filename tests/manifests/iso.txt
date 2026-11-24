@@ -1,0 +1,29 @@
+# iso.txt - ISO 9660 fixtures made by tests/tools/isomake.py and VALIDATED BY `7z x` (an independent ISO
+# reader) before commit; see docs/research/formats/iso.md and T021. The listing is exact (every non-directory
+# entry our reader produces is here); file CONTENT (size+crc) is 7z-validated for every line. Names: the plain
+# 8.3 names (basic.iso), the Joliet UCS-2 names (joliet.iso) and the Rock Ridge NM names (rr.iso) all match 7z.
+# Two rr.iso lines are our reader's DEFINED semantics, not 7z-name-checked: the symlink `link-to-readme` lists
+# its target bytes as content (7z materialises a link), and the CE-spilled long name is reassembled in full (this
+# 7z build stops at the first NM chunk). both.iso carries both trees with AGREEING names (7z shows Joliet, we
+# prefer Rock Ridge; see prec.iso in test_iso for the deliberate RR>Joliet divergence on disagreeing names).
+# zisofs.iso holds transparently-compressed (zisofs) files; the size+crc are of the UNCOMPRESSED data the reader
+# returns. 7z does NOT decode zisofs, so the oracle here is cross-implementation: the maker compresses each block
+# with Python's zlib, the reader decompresses with the vendored miniz - two independent zlib implementations.
+# archive|entry|size|crc32
+basic.iso|HELLO.TXT|10|d6561901
+basic.iso|DATA.BIN|3000|6c64a4f2
+basic.iso|README|18|8aaa1b3c
+basic.iso|SUB/INNER.TXT|16|24435aa6
+basic.iso|SUB/BIG.BIN|9000|ecee1f43
+joliet.iso|Hello World.txt|13|6089d158
+joliet.iso|héllo wörld.txt|15|4f5da1dc
+joliet.iso|SUBDIR/Inner File.txt|14|a8e785e9
+rr.iso|read me first.txt|21|47f03fc9
+rr.iso|link-to-readme|17|86c39b9e
+rr.iso|a_very_long_rock_ridge_name_that_overflows_the_record_system_use_area_and_spills_into_a_continuation_block_via_CE_so_the_reader_follows_it.txt|17|92c25c62
+rr.iso|subdir/inner long name.txt|19|ba80eba0
+both.iso|agree name.txt|17|8bd22ce7
+both.iso|SUBDIR/inner agree.txt|12|f6fc2276
+zisofs.iso|ZTEXT.TXT|1680|acd6b42b
+zisofs.iso|ZBIG.BIN|70000|430b488e
+zisofs.iso|ZHOLE.BIN|34768|2b9ae586

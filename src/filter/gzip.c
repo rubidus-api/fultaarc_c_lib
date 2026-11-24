@@ -1,0 +1,165 @@
+/* gzip.c - FultaArc: gzip stream reader (.gz, the outer wrapper of tar.gz). MIT.
+ * Written from docs/research/formats/gzip.md, which follows RFC 1952 (the public gzip format spec); the DEFLATE
+ * payload is RFC 1951 through the vendored miniz decoder (codec-deflate.md), and the CRC-32 is the project's.
+ * A gzip member is one stored stream: this reader lists one entry (named by FNAME, else the archive name with a
+ * .gz/.tgz/.taz suffix stripped) and streams the inflated bytes to the sink, checking the trailer CRC-32. No gzip
+ * writer; no encryption (gzip has none). See D-020. */
+#include "../core/internal.h"
+#define GZ_FHCRC   0x02u
+#define GZ_FEXTRA  0x04u
+#define GZ_FNAME   0x08u
+#define GZ_FCOMMENT 0x10u
+#define GZ_RESERVED 0xE0u
+
+typedef struct gzip_state {
+    uint64_t payload_off;   /* first DEFLATE byte */
+    uint64_t payload_len;   /* bytes of DEFLATE (trailer excluded when present) */
+    uint32_t crc;           /* trailer CRC-32 (valid when has_crc) */
+    bool has_crc;
+} gzip_state_t;
+
+static bool gzip_probe(const uint8_t *head, size_t n, uint64_t *offset) {
+    if (n < 4 || head[0] != 0x1F || head[1] != 0x8B || head[2] != 8) return false;  /* ID1 ID2 CM=deflate */
+    if (head[3] & GZ_RESERVED) return false;                                         /* reserved FLG bits: not gzip */
+    *offset = 0;
+    return true;
+}
+
+/* Derive a member name from the archive name: basename, with a gzip suffix stripped. Caller frees. */
+static char *gzip_derive_name(proven_allocator_t alloc, const char *archive_name) {
+    const char *base = archive_name ? archive_name : "";
+    for (const char *p = base; *p; p++) if (*p == '/' || *p == '\\') base = p + 1;
+    size_t len = strlen(base);
+    /* strip a trailing .gz; map .tgz/.taz to .tar */
+    const char *tar = NULL;
+    if (len >= 3 && (base[len-3]=='.') && (base[len-2]|32)=='g' && (base[len-1]|32)=='z') len -= 3;
+    else if (len >= 4 && base[len-4]=='.' && (base[len-3]|32)=='t' && (base[len-2]|32)=='g' && (base[len-1]|32)=='z') { len -= 4; tar = ".tar"; }
+    else if (len >= 4 && base[len-4]=='.' && (base[len-3]|32)=='t' && (base[len-2]|32)=='a' && (base[len-1]|32)=='z') { len -= 4; tar = ".tar"; }
+    if (len == 0) { base = "data"; len = 4; tar = NULL; }
+    size_t extra = tar ? 4 : 0;
+    char *out = fa_alloc(alloc, len + extra + 1);
+    if (!out) return NULL;
+    memcpy(out, base, len);
+    if (tar) memcpy(out + len, tar, 4);
+    out[len + extra] = 0;
+    return out;
+}
+
+/* A NUL-terminated header string (FNAME, FCOMMENT) at *off: read in blocks, not a byte per source call; the first
+ * `keep` bytes go to `out` (may be NULL), the rest are skipped; *off ends just past the NUL. TRUNCATED without one. */
+static fulta_arc_err_t gz_zstring(const fulta_arc_source_t *src, uint64_t *off, fa_buf_t *out, size_t keep) {
+    uint8_t blk[4096];
+    for (;;) {
+        if (*off >= src->size) return FULTA_ARC_ERR_TRUNCATED;
+        size_t n = src->size - *off < sizeof blk ? (size_t)(src->size - *off) : sizeof blk;
+        if (fa_source_read_exact(src, *off, fa_bytes_mut(blk, n))) return FULTA_ARC_ERR_TRUNCATED;
+        const uint8_t *z = memchr(blk, 0, n);
+        size_t take = z ? (size_t)(z - blk) : n;
+        if (out && out->size < keep) {
+            size_t k = keep - out->size < take ? keep - out->size : take;
+            if (fa_buf_append(out, fa_bytes(blk, k))) return FULTA_ARC_ERR_NOMEM;
+        }
+        *off += take;
+        if (z) { *off += 1; return FULTA_ARC_OK; }
+    }
+}
+
+static fulta_arc_err_t gzip_open(fulta_arc_t *arc, uint64_t offset) {
+    (void)offset;
+    const fulta_arc_source_t *src = arc->volumes[0];
+    uint8_t h[10];
+    if (src->size < 10 || fa_source_read_exact(src, 0, fa_bytes_mut(h, 10))) return FULTA_ARC_ERR_NOT_ARCHIVE;
+    if (h[0] != 0x1F || h[1] != 0x8B) return FULTA_ARC_ERR_NOT_ARCHIVE;
+    if (h[2] != 8) return FULTA_ARC_ERR_UNSUPPORTED;                /* CM must be DEFLATE */
+    uint8_t flg = h[3];
+    if (flg & GZ_RESERVED) return FULTA_ARC_ERR_NOT_ARCHIVE;
+    uint32_t mtime = fa_le32(h + 4);
+
+    uint64_t off = 10;
+    char *fname = NULL;                                            /* FNAME bytes (NUL-terminated), if present */
+
+    if (flg & GZ_FEXTRA) {
+        uint8_t x[2];
+        if (off + 2 > src->size || fa_source_read_exact(src, off, fa_bytes_mut(x, 2))) return FULTA_ARC_ERR_TRUNCATED;
+        off += 2 + (uint64_t)fa_le16(x);
+        if (off > src->size) return FULTA_ARC_ERR_TRUNCATED;
+    }
+    if (flg & GZ_FNAME) {
+        fa_buf_t nb = {.alloc = arc->alloc};
+        fulta_arc_err_t ze = gz_zstring(src, &off, &nb, 4096);   /* the name is kept up to 4 KiB, scanned to its NUL */
+        if (ze) { fa_buf_free(&nb); return ze; }
+        if (nb.size) {
+            fname = fa_alloc(arc->alloc, nb.size + 1);
+            if (!fname) { fa_buf_free(&nb); return FULTA_ARC_ERR_NOMEM; }
+            memcpy(fname, nb.data, nb.size);
+            fname[nb.size] = 0;
+        }
+        fa_buf_free(&nb);
+    }
+    if (flg & GZ_FCOMMENT) {
+        fulta_arc_err_t ze = gz_zstring(src, &off, NULL, 0);
+        if (ze) { fa_release(arc->alloc, fname); return ze; }
+    }
+    if (flg & GZ_FHCRC) {
+        off += 2;
+        if (off > src->size) { fa_release(arc->alloc, fname); return FULTA_ARC_ERR_TRUNCATED; }
+    }
+
+    gzip_state_t *st = fa_zalloc(arc->alloc, 1, sizeof *st);
+    if (!st) { fa_release(arc->alloc, fname); return FULTA_ARC_ERR_NOMEM; }
+    st->payload_off = off;
+
+    uint64_t size_hint = UINT64_MAX;
+    if (src->size >= off && src->size - off >= 8) {               /* single-member trailer: CRC-32 then ISIZE */
+        uint8_t t[8];
+        if (fa_source_read_exact(src, src->size - 8, fa_bytes_mut(t, 8))) { fa_release(arc->alloc, fname); fa_release(arc->alloc, st); return FULTA_ARC_ERR_TRUNCATED; }
+        st->crc = fa_le32(t);
+        st->has_crc = true;
+        size_hint = fa_le32(t + 4);                                /* ISIZE, modulo 2^32: a hint for listing only */
+        st->payload_len = (src->size - 8) - off;
+    } else {
+        st->payload_len = src->size - off;                         /* too short for a trailer; decode to the end */
+    }
+
+    char *name = fname ? NULL : gzip_derive_name(arc->alloc, arc->name);
+    const char *use = fname ? fname : (name ? name : "data");
+    fa_entry_t *e = fa_add_entry(arc, fa_bytes((const uint8_t *)use, strlen(use)), use, "gzip");
+    fa_release(arc->alloc, fname);
+    fa_release(arc->alloc, name);
+    if (!e) { fa_release(arc->alloc, st); return FULTA_ARC_ERR_NOMEM; }
+    e->pub.size = size_hint;
+    e->pub.packed_size = st->payload_len;
+    if (st->has_crc) { e->pub.crc32 = st->crc; e->pub.flags |= FULTA_ARC_ENTRY_HAS_CRC32; }
+    if (mtime) e->pub.mtime = (int64_t)mtime * 1000000000;
+
+    arc->state = st;
+    return FULTA_ARC_OK;
+}
+
+static fulta_arc_err_t gzip_extract(fulta_arc_t *arc, size_t index, const fulta_arc_sink_t *sink) {
+    gzip_state_t *st = arc->state;
+    if (index != 0 || !st) return FULTA_ARC_ERR_INVALID_ARG;
+    const fulta_arc_source_t *src = arc->volumes[0];
+    fa_piece_t piece = { src, 0, src->size };
+    fa_range_t range = { &piece, 1, src->size };
+    fa_stream_t *s = NULL, *d = NULL;
+    fulta_arc_err_t e = fa_stream_range(arc->alloc, &range, st->payload_off, st->payload_len, &s);
+    if (e) return e;
+    if ((e = fa_dec_deflate(s, false, UINT64_MAX, &d))) return e;   /* the decoder owns `s`: destroyed on failure too */
+    e = fa_pump(d, UINT64_MAX, st->has_crc, st->crc, sink, arc, arc->opt.keep_damaged);
+    fa_stream_destroy(d);                                     /* owns s; fa_pump does not take the stream */
+    return e;
+}
+
+static void gzip_close(fulta_arc_t *arc) {
+    fa_release(arc->alloc, arc->state);
+    arc->state = NULL;
+}
+
+const fa_format_ops_t fa_gzip_ops = {
+    .format = FULTA_ARC_FORMAT_GZIP,
+    .probe = gzip_probe,
+    .open = gzip_open,
+    .extract = gzip_extract,
+    .close = gzip_close,
+};

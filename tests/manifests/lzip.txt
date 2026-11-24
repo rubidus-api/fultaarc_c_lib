@@ -1,0 +1,6 @@
+# lzip.txt - lzip (.lz) fixtures. LZMA1 payload made by Python liblzma (independent of the vendored LZMA SDK),
+# wrapped in lzip framing by tests/tools/lzenc.py; FultaArc decodes and verifies the trailer CRC-32. See T018.
+# archive|entry|size|crc32
+bin.lz|bin|50000|393f1070
+small.lz|small|900|ca05ae1e
+text.lz|text|13500|f9abba39
